@@ -6,12 +6,14 @@
 
 package kilim.bench;
 
-import kilim.*;
+import kilim.Fiber;
+import kilim.Pausable;
+import kilim.Task;
     
 public class Rec extends Task {
     static boolean pause = false;
     static boolean pausable = false;
-    public static void main(String[] args) throws  Exception {
+    public static void main(String[] args) throws  Exception, NumberFormatException {
         int n = Integer.parseInt(args[0]);
         int d = Integer.parseInt(args[1]);
         
@@ -28,10 +30,10 @@ public class Rec extends Task {
         pausable = false;
         testCont(new Rec(5, 5));
         long tbase = testCont(new Rec(n, d));
-        System.out.println(n + " " + tbase + " " + tnopause + " " + tpause);
+        System.out.println(n + " " + tbase + ' ' + tnopause + ' ' + tpause);
     }
     
-    public static long testCont(Rec ex) throws NotPausable, Exception {
+    public static long testCont(Rec ex) throws Exception {
         long start = System.currentTimeMillis();
         if (pausable) {
             Fiber f = new Fiber(ex);

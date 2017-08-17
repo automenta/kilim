@@ -24,9 +24,9 @@ import kilim.Task;
  * [run]     java -cp ./classes:./classes:$CLASSPATH  kilim.examples.Ex
  */
 public class Ex extends Task {
-    static Mailbox<String> mb = new Mailbox<String>();
+    static Mailbox<String> mb = new Mailbox<>();
     
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws InterruptedException {
         new Ex().start();
         Thread.sleep(10);
         mb.putnb("Hello ");

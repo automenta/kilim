@@ -6,26 +6,20 @@
 
 package kilim.tools;
 
-import kilim.analysis.KilimContext;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-
 import kilim.KilimException;
 import kilim.WeavingClassLoader;
 import kilim.analysis.ClassInfo;
 import kilim.analysis.ClassWeaver;
 import kilim.analysis.FileLister;
+import kilim.analysis.KilimContext;
 import kilim.mirrors.CachedClassMirrors;
+
+import java.io.*;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * This class supports both command-line and run time weaving of Kilim bytecode. 
@@ -78,7 +72,7 @@ public class Weaver {
      */
     public static void main(String[] args) throws IOException {
         ArrayList<String> names = parseArgs(args);
-        doMain(names.toArray(new String [] {}),null);
+        doMain(names.toArray(new String[names.size()]),null);
         if (err > 0) System.exit(err);
     }
     private static String [] concat(String [] a,String [] b) {
@@ -140,7 +134,7 @@ public class Weaver {
                 // ke.printStackTrace();
                 System.exit(1);
             } catch (IOException ioe) {
-                System.err.println("Unable to find/process '" + currentName + "'");
+                System.err.println("Unable to find/process '" + currentName + '\'');
                 System.exit(1);
             } catch (Throwable t) {
                 System.err.println("Error weaving " + currentName);
@@ -152,13 +146,13 @@ public class Weaver {
     }
 
     static boolean exclude(String name) {
-        return excludePattern == null ? false : excludePattern.matcher(name).find();
+        return excludePattern != null && excludePattern.matcher(name).find();
     }
 
     // non-static to allow easy usage from alternative classloaders
     public ClassWeaver weave(InputStream is) {
-        ClassWeaver cw = null;
         if (is==null) return null;
+        ClassWeaver cw = null;
         try {
             cw = new ClassWeaver(context,is);
             cw.weave();
@@ -167,7 +161,7 @@ public class Weaver {
         return cw;
     }
 
-    public void weaveFile(String name, InputStream is) throws IOException {
+    public void weaveFile(String name, InputStream is) {
         try {
             ClassWeaver cw = new ClassWeaver(context,is);
             cw.weave();
@@ -190,14 +184,14 @@ public class Weaver {
 
     static void writeClasses(ClassWeaver cw) throws IOException {
         List<ClassInfo> cis = cw.getClassInfos();
-        if (cis.size() > 0) {
+        if (!cis.isEmpty()) {
             for (ClassInfo ci : cis) {
                 writeClass(ci);
             }
         }
     }
 
-    public static void writeClass(ClassInfo ci) throws IOException {
+    public static void writeClass(ClassInfo ci) throws IOException, FileNotFoundException {
         String className = ci.className.replace('.', File.separatorChar);
         String dir = outputDir + File.separatorChar + getDirName(className);
         mkdir(dir);
@@ -239,29 +233,37 @@ public class Weaver {
         System.exit(1);
     }
 
-    static ArrayList<String> parseArgs(String[] args) throws IOException {
+    static ArrayList<String> parseArgs(String[] args) {
         if (args.length == 0)
             help();
 
-        ArrayList<String> ret = new ArrayList<String>(args.length);
+        ArrayList<String> ret = new ArrayList<>(args.length);
         String regex = null;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
-            if (arg.equals("-d")) {
-                outputDir = args[++i];
-            } else if (arg.equals("-q")) {
-                verbose = false;
-            } else if (arg.equals("-f")) {
-                force = true;
-            } else if (arg.equals("-c")) {
-                proxy = false;
-            } else if (arg.equals("-h")) {
-                help();
-            } else if (arg.equals("-x")) {
-                regex = args[++i];
-                excludePattern = Pattern.compile(regex);
-            } else {
-                ret.add(arg);
+            switch (arg) {
+                case "-d":
+                    outputDir = args[++i];
+                    break;
+                case "-q":
+                    verbose = false;
+                    break;
+                case "-f":
+                    force = true;
+                    break;
+                case "-c":
+                    proxy = false;
+                    break;
+                case "-h":
+                    help();
+                    break;
+                case "-x":
+                    regex = args[++i];
+                    excludePattern = Pattern.compile(regex);
+                    break;
+                default:
+                    ret.add(arg);
+                    break;
             }
         }
         if (outputDir == null) {
@@ -298,7 +300,7 @@ public class Weaver {
     public List<ClassInfo> weave(List<ClassInfo> classes) throws KilimException, IOException {
         // save the detector attached to this thread, if any. It will be restored
         // later.
-        ArrayList<ClassInfo> ret = new ArrayList<ClassInfo>(classes.size());
+        ArrayList<ClassInfo> ret = new ArrayList<>(classes.size());
         try {
             // First cache all the method signatures from the supplied classes to allow
             // the weaver to lookup method signatures from mutually recursive classes.

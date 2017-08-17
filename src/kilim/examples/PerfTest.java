@@ -44,10 +44,10 @@ public class PerfTest extends Task {
     public static void performanceRun(int runNumber) {
             final long start = System.nanoTime();
             Mailbox<Integer> mbox = QUEUE_CAPACITY==0
-                    ? new Mailbox<Integer>()
-                    : new Mailbox<Integer>(QUEUE_CAPACITY,QUEUE_CAPACITY);
-            Mailbox<ExitMsg> exitmb1 = new Mailbox<ExitMsg>();
-            Mailbox<ExitMsg> exitmb2 = new Mailbox<ExitMsg>();
+                    ? new Mailbox<>()
+                    : new Mailbox<>(QUEUE_CAPACITY, QUEUE_CAPACITY);
+            Mailbox<ExitMsg> exitmb1 = new Mailbox<>();
+            Mailbox<ExitMsg> exitmb2 = new Mailbox<>();
             Producer1 p1 = new Producer1(mbox);
             p1.informOnExit(exitmb1);
 

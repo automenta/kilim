@@ -5,42 +5,18 @@
  */
 
 package kilim.analysis;
-import static kilim.Constants.D_FIBER_LAST_ARG;
-import static kilim.Constants.D_INT;
-import static kilim.Constants.D_VOID;
-import static kilim.Constants.FIBER_CLASS;
-import static kilim.Constants.TASK_CLASS;
-import static kilim.analysis.VMType.TOBJECT;
-import static kilim.analysis.VMType.loadVar;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.GETFIELD;
-import static org.objectweb.asm.Opcodes.GOTO;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.RETURN;
+
+import kilim.Constants;
+import kilim.mirrors.Detector;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import kilim.Constants;
-import kilim.mirrors.Detector;
-
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.LocalVariableNode;
-import org.objectweb.asm.tree.LookupSwitchInsnNode;
-import org.objectweb.asm.tree.TableSwitchInsnNode;
-import org.objectweb.asm.tree.TryCatchBlockNode;
+import static kilim.Constants.*;
+import static kilim.analysis.VMType.TOBJECT;
+import static kilim.analysis.VMType.loadVar;
 
 /**
  * This class takes the basic blocks from a MethodFlow and generates 
@@ -70,7 +46,7 @@ public class MethodWeaver {
      */
     private int                   fiberVar;
     private int                   numWordsInSig;
-    private ArrayList<CallWeaver> callWeavers = new ArrayList<CallWeaver>(5);
+    private ArrayList<CallWeaver> callWeavers = new ArrayList<>(5);
 
     private Detector detector;
 
@@ -123,25 +99,26 @@ public class MethodWeaver {
     private void visitAttrs(MethodVisitor mv) {
         MethodFlow mf = methodFlow;
         // visits the method attributes
-        int i, j, n;
         if (mf.annotationDefault != null) {
             AnnotationVisitor av = mv.visitAnnotationDefault();
             MethodFlow.acceptAnnotation(av, null, mf.annotationDefault);
             av.visitEnd();
         }
-        n = mf.visibleAnnotations == null ? 0 : mf.visibleAnnotations.size();
+        int n = mf.visibleAnnotations == null ? 0 : mf.visibleAnnotations.size();
+        int i;
         for (i = 0; i < n; ++i) {
-            AnnotationNode an = (AnnotationNode) mf.visibleAnnotations.get(i);
+            AnnotationNode an = mf.visibleAnnotations.get(i);
             an.accept(mv.visitAnnotation(an.desc, true));
         }
         n = mf.invisibleAnnotations == null ? 0
                 : mf.invisibleAnnotations.size();
         for (i = 0; i < n; ++i) {
-            AnnotationNode an = (AnnotationNode) mf.invisibleAnnotations.get(i);
+            AnnotationNode an = mf.invisibleAnnotations.get(i);
             an.accept(mv.visitAnnotation(an.desc, false));
         }
         n = mf.visibleParameterAnnotations == null ? 0
                 : mf.visibleParameterAnnotations.length;
+        int j;
         for (i = 0; i < n; ++i) {
             List<?> l = mf.visibleParameterAnnotations[i];
             if (l == null) {
@@ -166,7 +143,7 @@ public class MethodWeaver {
         }
         n = mf.attrs == null ? 0 : mf.attrs.size();
         for (i = 0; i < n; ++i) {
-            mv.visitAttribute((Attribute) mf.attrs.get(i));
+            mv.visitAttribute(mf.attrs.get(i));
         }
     }
     
@@ -262,7 +239,7 @@ public class MethodWeaver {
             for (Handler h: cw.bb.handlers) {
                 if (h.catchBB == catchBB) {
                     if (cwList == null) {
-                        cwList = new ArrayList<CallWeaver>(callWeavers.size()); 
+                        cwList = new ArrayList<>(callWeavers.size());
                     }
                     if (!cwList.contains(cw)) {
                     cwList.add(cw);
@@ -296,11 +273,11 @@ public class MethodWeaver {
      * @param mv
      */
     private void genPausableMethod(MethodVisitor mv, BasicBlock bb) {
-        CallWeaver caw = null;
         if (bb.isGetCurrentTask()) {
             genGetCurrentTask(mv, bb);
             return;
         }
+        CallWeaver caw = null;
         for (CallWeaver cw : callWeavers) {
             if (cw.getBasicBlock() == bb) {
                 caw = cw;
@@ -366,7 +343,7 @@ public class MethodWeaver {
      */
     private void genPrelude(MethodVisitor mv) {
         if (!methodFlow.isPausable()) return;
-        if (callWeavers.size() == 0 && (!hasGetCurrentTask())) {
+        if (callWeavers.isEmpty() && (!hasGetCurrentTask())) {
             // Method has been marked pausable, but does not call any pausable methods, nor Task.getCurrentTask.  
             // Prelude is not needed at all.
             return; 
@@ -378,13 +355,13 @@ public class MethodWeaver {
        
         mv.visitVarInsn(ALOAD, lastVar);
         if (lastVar < fiberVar) {
-            if (callWeavers.size() > 0) {
+            if (!callWeavers.isEmpty()) {
                 mv.visitInsn(DUP); // for storing into fiberVar
             }
             mv.visitVarInsn(ASTORE, getFiberVar());
         }
         
-        if (callWeavers.size() == 0) {
+        if (callWeavers.isEmpty()) {
           // No pausable method calls, but Task.getCurrentTask() is present. 
           // We don't need the rest of the prelude.
            return; 
@@ -510,7 +487,7 @@ public class MethodWeaver {
     void visitTryCatchBlocks(MethodVisitor mv) {
         MethodFlow mf = methodFlow;
         ArrayList<BasicBlock> bbs = mf.getBasicBlocks();
-        ArrayList<Handler> allHandlers = new ArrayList<Handler>(bbs.size() * 2);
+        ArrayList<Handler> allHandlers = new ArrayList<>(bbs.size() * 2);
         for (BasicBlock bb : bbs) {
             allHandlers.addAll(bb.handlers);
         }

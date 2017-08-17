@@ -5,11 +5,10 @@
  */
 
 package kilim.tools;
-import static kilim.analysis.Utils.dedent;
-import static kilim.analysis.Utils.indent;
-import static kilim.analysis.Utils.pn;
-import static kilim.analysis.Utils.resetIndentation;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
+
+import kilim.analysis.*;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,17 +21,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import kilim.analysis.BasicBlock;
-import kilim.analysis.ClassFlow;
-import kilim.analysis.Frame;
-import kilim.analysis.KilimContext;
-import kilim.analysis.MethodFlow;
-import kilim.analysis.TypeDesc;
-import kilim.analysis.Usage;
-import kilim.analysis.Value;
-
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
+import static kilim.analysis.Utils.*;
+import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 
 /**
  * Used to dump the stack and locals at the beginning of each basic block
@@ -75,9 +65,6 @@ public class FlowAnalyzer {
             for (MethodFlow flow: flows) {
                 reportFlow(flow, className);
             }
-        } catch (IOException e) {
-            pn("##################################################");
-            stackTrace(e);
         } catch (Throwable ie) {
             pn("##################################################");
             stackTrace(ie);
@@ -103,7 +90,7 @@ public class FlowAnalyzer {
             if (ainode instanceof MethodInsnNode) {
                 MethodInsnNode m = (MethodInsnNode)ainode;
                 int n = getNumArgs(m); // This many will get consumed from stack
-                pn("Call(" + n + "): " + m.owner + "." + m.name + m.desc);
+                pn("Call(" + n + "): " + m.owner + '.' + m.name + m.desc);
                 indent(2);
                 pn("Inframe: ");
                 indent(2);
@@ -123,10 +110,9 @@ public class FlowAnalyzer {
     }
     
     private static String uniqueItems(BasicBlock bb, Frame f, Usage u, int nStack) {
-        StringBuffer sb = new StringBuffer(80);
-        int numNonConstants = 0;
+        StringBuilder sb = new StringBuilder(80);
         int numLive = 0;
-        ArrayList<Value> set = new ArrayList<Value>(10);
+        ArrayList<Value> set = new ArrayList<>(10);
         for (int i = 0; i < f.getMaxLocals(); i++) {
             if (u.isLiveIn(i)) {
                 numLive++;
@@ -143,6 +129,7 @@ public class FlowAnalyzer {
         // create canonical sig. Convert types to one of 'O', 'I', 'F', 'L', 'D' and
         // put in sorted order
         // Also count non constants while we are iterating anyway.
+        int numNonConstants = 0;
         for (int i = 0; i < set.size(); i++) {
             Value v = set.get(i);
             char c = v.getTypeDesc().charAt(0);
@@ -172,10 +159,10 @@ public class FlowAnalyzer {
         Arrays.sort(sig);
         numLive += nStack;
         sb.append("avail: ").append(nStack + f.getMaxLocals());
-        sb.append(", live: " + numLive);
+        sb.append(", live: ").append(numLive);
         sb.append(", unique: ").append(set.size());
         sb.append(", unique non-const: ").append(numNonConstants);
-        sb.append("\nState signature: ").append(set.size() == 0 ? "None" : new String(sig));
+        sb.append("\nState signature: ").append(set.isEmpty() ? "None" : new String(sig));
         return sb.toString();
     }
     
@@ -189,7 +176,7 @@ public class FlowAnalyzer {
         try {
             Enumeration<JarEntry> e = new JarFile(jarFile).entries();
             while (e.hasMoreElements()) {
-                ZipEntry en = (ZipEntry) e.nextElement();
+                ZipEntry en = e.nextElement();
                 String n = en.getName();
                 if (!n.endsWith(".class")) continue;
                 n = n.substring(0, n.length() - 6).replace('/','.');

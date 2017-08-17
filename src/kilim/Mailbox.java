@@ -39,7 +39,7 @@ public class Mailbox<T> implements PauseReason, EventPublisher {
     public static final Event messageAvailable = new Event(SPACE_AVAILABLE);
     public static final Event timedOut = new Event(TIMED_OUT);
     
-    LinkedList<EventSubscriber> srcs = new LinkedList<EventSubscriber>();
+    LinkedList<EventSubscriber> srcs = new LinkedList<>();
 
     // DEBUG stuff
     // To do: move into monitorable stat object
@@ -81,7 +81,7 @@ public class Mailbox<T> implements PauseReason, EventPublisher {
                 icons = (ic + 1) % msgs.length;
                 numMsgs = n - 1;
                 
-                if (srcs.size() > 0) {
+                if (!srcs.isEmpty()) {
                     producer = srcs.poll();
                 }
             } else {
@@ -479,9 +479,9 @@ public class Mailbox<T> implements PauseReason, EventPublisher {
         }
         public void blockingWait(final long timeoutMillis) {
             long start = System.currentTimeMillis();
-            long remaining = timeoutMillis;
-            boolean infiniteWait = timeoutMillis == 0;
             synchronized (Mailbox.this) {
+                boolean infiniteWait = timeoutMillis == 0;
+                long remaining = timeoutMillis;
                 while (!eventRcvd && (infiniteWait || remaining > 0)) {
                     try {
                         Mailbox.this.wait(infiniteWait? 0 : remaining);
@@ -554,7 +554,7 @@ public class Mailbox<T> implements PauseReason, EventPublisher {
     }
 
     public synchronized String toString() {
-        return "id:" + System.identityHashCode(this) + " " +
+        return "id:" + System.identityHashCode(this) + ' ' +
         // DEBUG "nGet:" + nGet + " " +
                 // "nPut:" + nPut + " " +
                 // "numWastedPuts:" + nWastedPuts + " " +

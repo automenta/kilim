@@ -2,9 +2,9 @@
 
 package kilim.concurrent;
 
-import java.lang.reflect.Field;
-
 import sun.misc.Unsafe;
+
+import java.lang.reflect.Field;
 
 @SuppressWarnings("restriction")
 public class UnsafeAccess {

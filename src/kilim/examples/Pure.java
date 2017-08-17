@@ -2,8 +2,8 @@
 
 package kilim.examples;
 
-import kilim.Pausable;
 import kilim.Continuation;
+import kilim.Pausable;
 import kilim.Scheduler;
 import kilim.Task;
 

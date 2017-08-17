@@ -6,11 +6,11 @@
 
 package kilim.examples;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import kilim.Mailbox;
 import kilim.Pausable;
 import kilim.Scheduler;
 import kilim.Task;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
 
@@ -44,14 +44,14 @@ public class TimerBlast extends Task {
         
     }
     
-    public static void main(String[] args) throws Exception {
-        int num = 1000;
-        
+    public static void main(String[] args) throws InterruptedException {
+
         for (int ii=0; ii < 10; ii++) new TimerBlast().start();
         Thread.sleep(200);
         new Tick().start();
         Thread.sleep(190);
-        for (int ii=0; ii < num; ii++) new TimerBlast().start();
+        int num = 1000;
+        for (int ii = 0; ii < num; ii++) new TimerBlast().start();
         
         for (int ii=0; ii < 30; ii++) {
             System.out.println("...");

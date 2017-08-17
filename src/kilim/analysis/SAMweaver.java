@@ -5,9 +5,9 @@ import kilim.Constants;
 import kilim.mirrors.CachedClassMirrors.ClassMirror;
 import kilim.mirrors.CachedClassMirrors.MethodMirror;
 import kilim.mirrors.ClassMirrorNotFoundException;
-
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * {@code SAMweaver} generates code to support functional interfaces (also known
@@ -70,7 +70,7 @@ import org.objectweb.asm.MethodVisitor;
  * Of course, all this applies only if the functional method is pausable.
  */
 
-public class SAMweaver implements Constants {
+public class SAMweaver {
     String  interfaceName;
     String  methodName;
     String  desc;
@@ -101,7 +101,7 @@ public class SAMweaver implements Constants {
     }
     
     public String toString() {
-        return interfaceName+"."+methodName+desc + " ->" +getShimMethodName();
+        return interfaceName+ '.' +methodName+desc + " ->" +getShimMethodName();
     }
 
     public int hashCode() {
@@ -114,7 +114,7 @@ public class SAMweaver implements Constants {
     }
 
     String getShimDesc() {
-        return this.desc.replace("(", "(" + TypeDesc.getInterned(this.interfaceName))
+        return this.desc.replace("(", '(' + TypeDesc.getInterned(this.interfaceName))
                 .replace(")", Constants.D_FIBER_LAST_ARG);
     }
 
@@ -134,7 +134,7 @@ public class SAMweaver implements Constants {
      */
     public void accept(ClassVisitor cv) {
         String shimDesc = getShimDesc();
-        MethodVisitor mv = cv.visitMethod(ACC_STATIC | ACC_PRIVATE, getShimMethodName(), shimDesc, null, 
+        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE, getShimMethodName(), shimDesc, null,
                 getExceptions());
         // load arguments
         int ivar = 0;
@@ -147,18 +147,18 @@ public class SAMweaver implements Constants {
         int fiberVar = ivar - 1;
 
         // invoke interface
-        String fiberDesc = desc.replace(")", Constants.D_FIBER + ")");
-        mv.visitMethodInsn(INVOKEINTERFACE, interfaceName, methodName, fiberDesc, true);
+        String fiberDesc = desc.replace(")", Constants.D_FIBER + ')');
+        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, interfaceName, methodName, fiberDesc, true);
 
         // store callee object reference in fiber 
-        mv.visitVarInsn(ALOAD, fiberVar);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitMethodInsn(INVOKEVIRTUAL, FIBER_CLASS, "setCallee", "(" + D_OBJECT + ")V", false);
+        mv.visitVarInsn(Opcodes.ALOAD, fiberVar);
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, Constants.FIBER_CLASS, "setCallee", '(' + Constants.D_OBJECT + ")V", false);
 
         // return .. RETURN (if void) or ARETURN, IRETURN, etc.
         String retDesc = TypeDesc.getReturnTypeDesc(shimDesc);
         if (retDesc.charAt(0) == 'V') {
-            mv.visitInsn(RETURN);
+            mv.visitInsn(Opcodes.RETURN);
         } else {
             int vmt = VMType.toVmType(retDesc);
             mv.visitInsn(VMType.retInsn[vmt]);

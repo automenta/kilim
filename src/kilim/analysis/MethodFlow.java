@@ -5,42 +5,18 @@
  */
 
 package kilim.analysis;
-import static kilim.Constants.NOT_PAUSABLE_CLASS;
-import static kilim.Constants.PAUSABLE_CLASS;
-import static kilim.analysis.BasicBlock.COALESCED;
-import static kilim.analysis.BasicBlock.ENQUEUED;
-import static kilim.analysis.BasicBlock.INLINE_CHECKED;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static org.objectweb.asm.Opcodes.ACC_VOLATILE;
-import static org.objectweb.asm.Opcodes.JSR;
-
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.TreeMap;
 
 import kilim.KilimException;
 import kilim.mirrors.Detector;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.FrameNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.LineNumberNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.TryCatchBlockNode;
+import java.util.*;
+
+import static kilim.Constants.NOT_PAUSABLE_CLASS;
+import static kilim.Constants.PAUSABLE_CLASS;
+import static kilim.analysis.BasicBlock.*;
+import static org.objectweb.asm.Opcodes.*;
 
 
 /** 
@@ -85,13 +61,13 @@ public class MethodFlow extends MethodNode {
     private boolean hasPausableAnnotation;
     private boolean suppressPausableCheck;
 
-    private List<MethodInsnNode> pausableMethods = new LinkedList<MethodInsnNode>();
+    private List<MethodInsnNode> pausableMethods = new LinkedList<>();
     
     final Detector detector;
 
-    private TreeMap<Integer, LineNumberNode> lineNumberNodes = new TreeMap<Integer, LineNumberNode>();
+    private TreeMap<Integer, LineNumberNode> lineNumberNodes = new TreeMap<>();
 
-    private HashMap<Integer, FrameNode> frameNodes = new HashMap<Integer, FrameNode>();
+    private HashMap<Integer, FrameNode> frameNodes = new HashMap<>();
 
     private boolean hasPausableInvokeDynamic;
     
@@ -112,9 +88,9 @@ public class MethodFlow extends MethodNode {
         super(Opcodes.ASM5, access, name, desc, signature, exceptions);
         this.classFlow = classFlow;
         this.detector = detector;
-        posToLabelMap = new ArrayList<LabelNode>();
-        labelToPosMap = new HashMap<LabelNode, Integer>();
-        labelToBBMap = new HashMap<LabelNode, BasicBlock>();
+        posToLabelMap = new ArrayList<>();
+        labelToPosMap = new HashMap<>();
+        labelToBBMap = new HashMap<>();
 
         if (exceptions != null && exceptions.length > 0) {
             for (String e: exceptions) { 
@@ -159,7 +135,7 @@ public class MethodFlow extends MethodNode {
     public void analyze() throws KilimException {
         preAssignCatchHandlers();
         buildBasicBlocks();
-        if (basicBlocks.size() == 0) return;
+        if (basicBlocks.isEmpty()) return;
         consolidateBasicBlocks();
         assignCatchHandlers();
         inlineSubroutines();
@@ -216,7 +192,7 @@ public class MethodFlow extends MethodNode {
         }
     }
 
-    private String toString(String className, String methName, String desc) {
+    private static String toString(String className, String methName, String desc) {
         return className.replace('/', '.') + '.' + methName + desc;
     }
     
@@ -332,8 +308,8 @@ public class MethodFlow extends MethodNode {
         ArrayList<TryCatchBlockNode> tcbs = (ArrayList<TryCatchBlockNode>) tryCatchBlocks;
         /// aargh. I'd love to create an array of Handler objects, but generics
         // doesn't care for it.
-        if (tcbs.size() == 0) return;
-        ArrayList<Handler> handlers= new ArrayList<Handler>(tcbs.size());
+        if (tcbs.isEmpty()) return;
+        ArrayList<Handler> handlers= new ArrayList<>(tcbs.size());
         
         for (int i = 0; i < tcbs.size(); i++) {
             TryCatchBlockNode tcb = tcbs.get(i);
@@ -343,7 +319,7 @@ public class MethodFlow extends MethodNode {
                     tcb.type, 
                     getOrCreateBasicBlock(tcb.handler)));
         }
-        Collections.sort(handlers, Handler.startComparator());
+        handlers.sort(Handler.startComparator());
         origHandlers = handlers;
         buildHandlerMap();
     }
@@ -392,9 +368,10 @@ public class MethodFlow extends MethodNode {
     private boolean calcBornOnce() {
         BBList bbs = getBasicBlocks();
         LinkedList<BasicBlock> pending = new LinkedList();
-        boolean changed = false, first = true;
         pending.add(bbs.get(0));
         bbs.get(0).usage.evalBornIn(null,new BitSet());
+        boolean first = true;
+        boolean changed = false;
         while (! pending.isEmpty()) {
             BasicBlock bb = pending.pop();
             if (bb.visited) continue;
@@ -446,9 +423,9 @@ public class MethodFlow extends MethodNode {
         Collections.sort(bbs); // sorts in increasing startPos order
         
         firstBorn = setArgsBorn(bbs.get(0));
-        
-        boolean changed;
+
         calcBornUsage();
+        boolean changed;
         do {
             changed = false;
             for (int i = bbs.size() - 1; i >= 0; i--) {
@@ -506,7 +483,7 @@ public class MethodFlow extends MethodNode {
     
     private boolean checkNoBasicBlockLeftBehind() { // like "no child left behind"
         ArrayList<BasicBlock> bbs = basicBlocks;
-        HashSet<BasicBlock> hs = new HashSet<BasicBlock>(bbs.size() * 2);
+        HashSet<BasicBlock> hs = new HashSet<>(bbs.size() * 2);
         hs.addAll(bbs);
         int prevBBend = -1;
         for (BasicBlock bb: bbs) {
@@ -524,7 +501,7 @@ public class MethodFlow extends MethodNode {
     }
     
     private void dataFlow() {
-        workset = new PriorityQueue<BasicBlock>(instructions.size(), new BBComparator());
+        workset = new PriorityQueue<>(instructions.size(), new BBComparator());
         //System.out.println("Method: " + this.name);
         BasicBlock startBB = getBasicBlocks().get(0);
         assert startBB != null : "Null starting block in flowTypes()";

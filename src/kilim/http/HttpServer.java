@@ -6,12 +6,12 @@
 
 package kilim.http;
 
-import java.io.IOException;
-
 import kilim.Scheduler;
 import kilim.nio.NioSelectorScheduler;
 import kilim.nio.NioSelectorScheduler.SessionFactory;
 import kilim.nio.SessionTask;
+
+import java.io.IOException;
 
 /**
  * A very rudimentary HTTP server bound to a specific given port. 
@@ -49,7 +49,7 @@ public class HttpServer {
           this.handler = handler;
       }
       
-      public SessionTask get() throws Exception {
+      public SessionTask get() {
           return new HttpSession.StringSession(handler);
       }
   }

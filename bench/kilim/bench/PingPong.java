@@ -17,8 +17,8 @@ import kilim.Task;
 public class PingPong {
 
     public static void main(String[] args) {
-        Mailbox<Msg> pingmb = new Mailbox<Msg>();
-        Mailbox<Msg> pongmb = new Mailbox<Msg>();
+        Mailbox<Msg> pingmb = new Mailbox<>();
+        Mailbox<Msg> pongmb = new Mailbox<>();
         new Ping(pingmb, pongmb).start();
         new Pong(pongmb).start();
         pingmb.putnb(new Msg(MsgType.Init, 100000, null));
@@ -89,7 +89,7 @@ class Pong extends Task {
 }
 
 
-enum MsgType {Init, Start, PingMsg, PongMsg};
+enum MsgType {Init, Start, PingMsg, PongMsg}
 
 class Msg {
     MsgType type;
@@ -99,6 +99,6 @@ class Msg {
     Msg(MsgType t, Mailbox<Msg> amb) {type = t; mb = amb;}
     
     public String toString() {
-        return "" + System.identityHashCode(this) + " " + type;
+        return System.identityHashCode(this) + " " + type;
     }
 }

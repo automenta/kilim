@@ -5,15 +5,17 @@
  */
 
 package kilim.bench.rmi;
-import java.rmi.*;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Hashtable;
 public class RMI {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws NumberFormatException, RemoteException {
         int ntimes = args.length == 0 ? 1000 : Integer.parseInt(args[0]);
         Server obj = new Server();
         Ping stub = (Ping) UnicastRemoteObject.exportObject(obj, 0);
-        Hashtable<String, String> h = new Hashtable<String, String>();
+        Hashtable<String, String> h = new Hashtable<>();
         h.put("foo", "bar");
         h.put("hello", "world");
         long begin = System.currentTimeMillis();

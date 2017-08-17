@@ -36,16 +36,16 @@ public class SPSCQueue<T> {
 	}
 
 	public T poll() {
-		T msg = null;
-		final long currentHead = head.get();
-		boolean flag = false;
-		if (currentHead >= tailCache.value) {
+        final long currentHead = head.get();
+        if (currentHead >= tailCache.value) {
 			tailCache.value = tail.get();
 			if (currentHead >= tailCache.value) {
 				return null;
 			}
 		}
-		if (!flag) {
+        boolean flag = false;
+        T msg = null;
+        if (!flag) {
 			final int index = (int) currentHead & mask;
 			msg = buffer[index];
 			buffer[index] = null;

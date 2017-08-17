@@ -10,11 +10,11 @@ package kilim;
 public interface Spawnable<TT> {
     TT execute() throws Pausable;
 
-    public interface Call1<AA> {
-        void execute(AA arg1) throws Pausable;
+    interface Call1<AA> {
+        void execute(AA arg1);
     }
     
-    public interface Call {
+    interface Call {
         void execute() throws Pausable;
     }
 }

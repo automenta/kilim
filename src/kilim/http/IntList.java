@@ -16,7 +16,7 @@ public class IntList {
   
   public void add(int element) {
     if (numElements == array.length) {
-      array = (int[]) Utils.growArray(array, array.length * 3 / 2 );
+      array = Utils.growArray(array, array.length * 3 / 2 );
     }
     array[numElements++] = element;
   }

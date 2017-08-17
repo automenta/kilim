@@ -2,11 +2,14 @@
 
 package kilim;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import kilim.analysis.ClassInfo;
+import kilim.analysis.ClassWeaver;
+import kilim.analysis.FileLister;
+import kilim.analysis.KilimContext;
+import kilim.mirrors.CachedClassMirrors;
+import kilim.tools.Weaver;
+
+import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.CodeSigner;
@@ -15,13 +18,6 @@ import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
-
-import kilim.analysis.ClassInfo;
-import kilim.analysis.ClassWeaver;
-import kilim.analysis.FileLister;
-import kilim.analysis.KilimContext;
-import kilim.mirrors.CachedClassMirrors;
-import kilim.tools.Weaver;
 
 /**
  * Classloader that loads classes from the classpath spec given by the system property
@@ -50,10 +46,10 @@ public class WeavingClassLoader extends KilimClassLoader {
     ClassLoader pcl;
 
     public static URL [] getURLs(String [] classPaths) {
-        ArrayList<URL> urls = new ArrayList<URL>();
+        ArrayList<URL> urls = new ArrayList<>();
         for (String name : classPaths) {
             name = name.trim();
-            if (name.equals("")) continue;
+            if (name.isEmpty()) continue;
             try { urls.add(new File(name).toURI().toURL()); }
             catch (IOException ioe) {
                 // System.err.println( "'" + name + "' does not exist. See property " +
@@ -61,7 +57,7 @@ public class WeavingClassLoader extends KilimClassLoader {
             }
         }
 
-        URL [] paths = urls.toArray(new URL[0]);
+        URL [] paths = urls.toArray(new URL[urls.size()]);
         return paths;
     }
     
@@ -118,10 +114,10 @@ public class WeavingClassLoader extends KilimClassLoader {
         InputStream is = pcl.getResourceAsStream( cname );
         if (is==null) is = ClassLoader.getSystemResourceAsStream( cname );
         ClassWeaver cw;
-        byte [] code;
 
         if (is==null) {}
         else if (skip(cname)) {
+            byte[] code;
             if ((code=readFully(is)) != null)
                 return define(name,code);
         }
@@ -132,7 +128,7 @@ public class WeavingClassLoader extends KilimClassLoader {
         throw new ClassNotFoundException();
     }
 
-    private final HashMap<URL, ProtectionDomain> cache = new HashMap<URL, ProtectionDomain>();
+    private final HashMap<URL, ProtectionDomain> cache = new HashMap<>();
     private ProtectionDomain get(String name) {
         URL url = url(name);
         if (url==null) return null;
@@ -174,7 +170,7 @@ public class WeavingClassLoader extends KilimClassLoader {
     }
     public URL url(String name) {
         String cname = makeResourceName(name);
-        URL url = pcl.getResource( cname ), ret = null;
+        URL url = pcl.getResource( cname );
         if (url==null) url = ClassLoader.getSystemResource( cname );
         if (url==null) return null;
         String path = url.getPath();
@@ -182,7 +178,8 @@ public class WeavingClassLoader extends KilimClassLoader {
         boolean matches = path.endsWith(cname);
         assert matches : "url code source doesn't match expectation: " + name + ", " + path;
         if (! matches) return null;
-        
+
+        URL ret = null;
         try {
             ret = new URL(url,path.replace(cname,""));
         }

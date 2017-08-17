@@ -6,6 +6,11 @@
 
 package kilim.http;
 
+import kilim.Constants;
+import kilim.Pausable;
+import kilim.nio.EndPoint;
+import kilim.nio.ExposedBaos;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,11 +20,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
-
-import kilim.Constants;
-import kilim.Pausable;
-import kilim.nio.EndPoint;
-import kilim.nio.ExposedBaos;
 
 /**
  * The response object encapsulates the header and often, but not always, the content. The caller must set all the
@@ -116,14 +116,14 @@ public class HttpResponse extends HttpMsg {
     public static final byte[]                      CRLF                             = "\r\n".getBytes();
     public static final byte[]                      FIELD_SEP                        = ": ".getBytes();
 
-    public static ConcurrentHashMap<String, byte[]> byteCache                        = new ConcurrentHashMap<String, byte[]>();
+    public static ConcurrentHashMap<String, byte[]> byteCache                        = new ConcurrentHashMap<>();
 
     /**
      * The status line for the response. Can use any of the predefined strings in HttpResponse.ST_*.
      */
     public byte[]                                   status;
-    public ArrayList<String>                        keys                             = new ArrayList<String>();
-    public ArrayList<String>                        values                           = new ArrayList<String>();
+    public ArrayList<String>                        keys                             = new ArrayList<>();
+    public ArrayList<String>                        values                           = new ArrayList<>();
     public ExposedBaos                              bodyStream;
 
     public static final SimpleDateFormat            gmtdf;
@@ -199,11 +199,7 @@ public class HttpResponse extends HttpMsg {
         int nfields = keys.size();
         for (int i = 0; i < nfields; i++) {
             String key = keys.get(i);
-            byte[] keyb = byteCache.get(key);
-            if (keyb == null) {
-                keyb = key.getBytes();
-                byteCache.put(key, keyb);
-            }
+            byte[] keyb = byteCache.computeIfAbsent(key, String::getBytes);
             dos.write(keyb);
             dos.write(FIELD_SEP);
             dos.write(values.get(i).getBytes());

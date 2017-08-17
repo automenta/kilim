@@ -5,15 +5,13 @@
  */
 
 package kilim.analysis;
-import static kilim.Constants.STATE_CLASS;
-import static kilim.Constants.WOVEN_FIELD;
-import static org.objectweb.asm.Opcodes.ACC_FINAL;
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.RETURN;
-import static org.objectweb.asm.Opcodes.V1_1;
+
+import kilim.Constants;
+import kilim.KilimException;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.tree.AnnotationNode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,17 +20,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import kilim.Constants;
-import kilim.KilimException;
-import kilim.mirrors.Detector;
-
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InnerClassNode;
+import static kilim.Constants.STATE_CLASS;
+import static kilim.Constants.WOVEN_FIELD;
+import static org.objectweb.asm.Opcodes.*;
 
 /**
  * This class is the main entry point for the Weave tool. It uses
@@ -41,16 +31,12 @@ import org.objectweb.asm.tree.InnerClassNode;
  */
 public class ClassWeaver {
     public ClassFlow classFlow;
-    List<ClassInfo> classInfoList = new LinkedList<ClassInfo>();
-    static ThreadLocal<HashMap<String, ClassInfo>> stateClasses_ = 
-    		new ThreadLocal<HashMap<String, ClassInfo>>() {
-    	protected HashMap<String, ClassInfo> initialValue() {
-    		return new HashMap<String, ClassInfo>();
-    	}
-    };
+    List<ClassInfo> classInfoList = new LinkedList<>();
+    static ThreadLocal<HashMap<String, ClassInfo>> stateClasses_ =
+            ThreadLocal.withInitial(() -> new HashMap<String, ClassInfo>());
     
     public static void reset() {
-    	stateClasses_.set(new HashMap<String, ClassInfo>() );
+    	stateClasses_.set(new HashMap<>() );
     }
     
 
@@ -92,31 +78,31 @@ public class ClassWeaver {
             cv.visitOuterClass(cf.outerClass, cf.outerMethod, cf.outerMethodDesc);
         }
         // visits attributes and annotations
-        int i, n;
+        int n = cf.visibleAnnotations == null ? 0 : cf.visibleAnnotations.size();
         AnnotationNode an;
-        n = cf.visibleAnnotations == null ? 0 : cf.visibleAnnotations.size();
+        int i;
         for (i = 0; i < n; ++i) {
-            an = (AnnotationNode) cf.visibleAnnotations.get(i);
+            an = cf.visibleAnnotations.get(i);
             an.accept(cv.visitAnnotation(an.desc, true));
         }
         n = cf.invisibleAnnotations == null ? 0
                 : cf.invisibleAnnotations.size();
         for (i = 0; i < n; ++i) {
-            an = (AnnotationNode) cf.invisibleAnnotations.get(i);
+            an = cf.invisibleAnnotations.get(i);
             an.accept(cv.visitAnnotation(an.desc, false));
         }
         
         n = cf.attrs == null ? 0 : cf.attrs.size();
         for (i = 0; i < n; ++i) {
-            cv.visitAttribute((Attribute) cf.attrs.get(i));
+            cv.visitAttribute(cf.attrs.get(i));
         }
         // visits inner classes
         for (i = 0; i < cf.innerClasses.size(); ++i) {
-            ((InnerClassNode) cf.innerClasses.get(i)).accept(cv);
+            cf.innerClasses.get(i).accept(cv);
         }
         // visits fields
         for (i = 0; i < cf.fields.size(); ++i) {
-            ((FieldNode) cf.fields.get(i)).accept(cv);
+            cf.fields.get(i).accept(cv);
         }
         /*
          * Mark this class as "processed" by adding a dummy field, so that
@@ -162,7 +148,7 @@ public class ClassWeaver {
         cv.visitEnd();
     }
 
-    @SuppressWarnings(value = { "unchecked" })
+    @SuppressWarnings("unchecked")
     static String[] toStringArray(List list) {
         String[] array = new String[list.size()];
         list.toArray(array);
@@ -229,9 +215,8 @@ public class ClassWeaver {
             numByType[vi.vmt]++;
         }
         String className = makeClassName(numByType);
-        ClassInfo classInfo= null;
-            classInfo= stateClasses_.get().get(className);
-            if (classInfo == null) {
+        ClassInfo classInfo = stateClasses_.get().get(className);
+        if (classInfo == null) {
                 ClassWriter cw = new kilim.analysis.ClassWriter(ClassWriter.COMPUTE_FRAMES, context.detector);
                 cw.visit(V1_1, ACC_PUBLIC | ACC_FINAL, className, null, "kilim/State", null);
 
@@ -258,7 +243,7 @@ public class ClassWeaver {
         return className;
     }
 
-    private String makeClassName(int[] numByType) {
+    private static String makeClassName(int[] numByType) {
         StringBuilder sb = new StringBuilder(30);
         sb.append("kilim/S_");
         for (int t = 0; t < 5; t++) {
@@ -277,7 +262,7 @@ public class ClassWeaver {
         return classFlow.isInterface();
     }
     
-    ArrayList<SAMweaver> samWeavers = new ArrayList<SAMweaver>();
+    ArrayList<SAMweaver> samWeavers = new ArrayList<>();
     SAMweaver getSAMWeaver(String owner, String methodName, String desc, boolean itf) {
         SAMweaver sw = new SAMweaver(context,owner, methodName, desc, itf);
         // intern

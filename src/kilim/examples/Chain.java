@@ -6,7 +6,9 @@
 
 package kilim.examples;
 
-import kilim.*;
+import kilim.Mailbox;
+import kilim.Pausable;
+import kilim.Task;
 /**
  * Set up a chain of tasks. Each task knows about its mailbox and
  * that of the next in the chain, but is not given the other tasks
@@ -45,12 +47,12 @@ public class Chain extends Task {
 
     public static void main(String args[]) {
         int n = args.length == 0 ? 10 : Integer.parseInt(args[0]);
-        Mailbox<StringBuffer> mb = new Mailbox<StringBuffer>();
+        Mailbox<StringBuffer> mb = new Mailbox<>();
         Mailbox<StringBuffer> nextms = null;
         for (int i = 0; i < n; i++) {
            new Chain(mb, nextms).start();
            nextms = mb;
-           mb = new Mailbox<StringBuffer>();
+           mb = new Mailbox<>();
         }
         nextms.putnb(new StringBuffer());        
     }

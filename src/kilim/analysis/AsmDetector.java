@@ -2,15 +2,14 @@
 
 package kilim.analysis;
 
-import java.util.LinkedList;
-import java.io.IOException;
-import java.util.HashMap;
-
 import kilim.mirrors.Detector;
-
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * This class is called by Detector to parse signatures of classes
@@ -18,7 +17,7 @@ import org.objectweb.asm.tree.MethodNode;
  * of trying to classload it.
  */
 public class AsmDetector {
-    static HashMap<String, ClassCache> classCacheMap= new HashMap<String, ClassCache>();
+    static HashMap<String, ClassCache> classCacheMap= new HashMap<>();
     public static int getPausableStatus(String className, String methodName,
             String desc, Detector detector) 
     {
@@ -77,9 +76,9 @@ public class AsmDetector {
     
     static class ClassCache {
         String className;
-        LinkedList<String> pausableMethods = new LinkedList<String>();
-        LinkedList<String> otherMethods = new LinkedList<String>();
-        LinkedList<String> superClasses = new LinkedList<String>();
+        LinkedList<String> pausableMethods = new LinkedList<>();
+        LinkedList<String> otherMethods = new LinkedList<>();
+        LinkedList<String> superClasses = new LinkedList<>();
         public void addSuper(String superName) {
             if (superName.equals("java/lang/Object")) return;
             if (!superClasses.contains(superName)) {superClasses.add(superName);}

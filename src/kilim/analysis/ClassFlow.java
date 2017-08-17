@@ -5,18 +5,17 @@
  */
 package kilim.analysis;
 
-import kilim.*;
-import kilim.mirrors.Detector;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-
+import kilim.Constants;
+import kilim.KilimException;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 
 /**
  * This class reads a .class file (or stream), wraps each method with a MethodFlow object and optionally analyzes it.
@@ -58,7 +57,7 @@ public class ClassFlow extends ClassNode {
 
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    @SuppressWarnings("unchecked")
     public MethodVisitor visitMethod(
             final int access,
             final String name,
@@ -90,12 +89,12 @@ public class ClassFlow extends ClassNode {
                 }
             }
             if (isWoven && !forceAnalysis) 
-                return new ArrayList<MethodFlow>(); // This is a hack. 
+                return new ArrayList<>(); // This is a hack.
 
 
             cr = null; // We don't need this any more.
-            classDesc = TypeDesc.getInterned("L" + name + ';');
-            ArrayList<MethodFlow> flows = new ArrayList<MethodFlow>(methods.size());
+            classDesc = TypeDesc.getInterned('L' + name + ';');
+            ArrayList<MethodFlow> flows = new ArrayList<>(methods.size());
             String msg = "";
             for (Object o : methods) {
                 try {
@@ -116,7 +115,7 @@ public class ClassFlow extends ClassNode {
                     msg = msg + ke.getMessage() + "\n-------------------------------------------------\n";
                 }
             }
-            if (msg.length() > 0) {
+            if (!msg.isEmpty()) {
                 throw new KilimException(msg);
             }
             methodFlows = flows;

@@ -5,20 +5,11 @@
  */
 
 package kilim.analysis;
-import static kilim.Constants.D_DOUBLE;
-import static kilim.Constants.D_FLOAT;
-import static kilim.Constants.D_LONG;
-import static kilim.Constants.D_OBJECT;
-import kilim.mirrors.Detector;
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static org.objectweb.asm.Opcodes.ACC_SYNCHRONIZED;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.DLOAD;
-import static org.objectweb.asm.Opcodes.FLOAD;
-import static org.objectweb.asm.Opcodes.ILOAD;
-import static org.objectweb.asm.Opcodes.LLOAD;
 
+import kilim.mirrors.Detector;
 import org.objectweb.asm.tree.MethodNode;
+
+import static kilim.Constants.*;
 
 
 /**
@@ -139,7 +130,7 @@ public class Frame {
         }
     }
     
-    private boolean checkType(String desc) {
+    private static boolean checkType(String desc) {
         if (desc.equals("Ljava/lang/Object;") && desc != D_OBJECT) return false;
         switch(desc.charAt(0)) {
             case 'L': case 'B': case 'C': case 'D': case 'F': case 'I':
@@ -269,21 +260,21 @@ public class Frame {
     
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer(100);
-        int numDefined = 0;
+        StringBuilder sb = new StringBuilder(100);
         sb.append("): ");
-        for (int i = 0; i < this.locals.length;i++) {
+        int numDefined = 0;
+        for (int i = 0; i < this.locals.length; i++) {
             Value v = locals[i];
             if (v != Value.V_UNDEFINED) {
                 numDefined++;
-                sb.append(i).append(':').append(this.locals[i]).append(" ");
+                sb.append(i).append(':').append(this.locals[i]).append(' ');
             }
         }
         sb.insert(0, numDefined);
         sb.insert(0, "Locals(");
-        sb.append("\n").append("Stack(").append(stacklen).append("): ");
+        sb.append('\n').append("Stack(").append(stacklen).append("): ");
         for (int i = 0; i < this.stacklen;i++) {
-            sb.append(this.stack[i]).append(" ");
+            sb.append(this.stack[i]).append(' ');
         }
         return sb.toString();
     }

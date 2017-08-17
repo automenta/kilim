@@ -6,27 +6,22 @@
 
 package kilim.tools;
 
-import static kilim.Constants.*;
+import kilim.analysis.FileLister;
+import kilim.analysis.KilimContext;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import kilim.analysis.FileLister;
-import kilim.analysis.KilimContext;
-import kilim.mirrors.CachedClassMirrors;
 
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
+import static kilim.Constants.*;
 
 /**
  * This is a replacement for the jasmin bytecode assembler and uses the same
@@ -60,8 +55,8 @@ public class Asm {
     private MethodVisitor           mv;
     private int                     maxLocals = 1;
     private int                     maxStack = 1;
-    private HashSet<String>         declaredLabels = new HashSet<String>();
-    private HashMap<String, Label>  labels         = new HashMap<String, Label>();
+    private HashSet<String>         declaredLabels = new HashSet<>();
+    private HashMap<String, Label>  labels         = new HashMap<>();
     private String                  className;
     private String                  methodName;
     private String                  fileName;
@@ -72,7 +67,7 @@ public class Asm {
     private LineNumberReader        reader;
     private boolean skip = false;
 
-    static HashMap<String, Integer> modifiers      = new HashMap<String, Integer>();
+    static HashMap<String, Integer> modifiers      = new HashMap<>();
 
     static {
         modifiers.put("public", ACC_PUBLIC);
@@ -102,10 +97,10 @@ public class Asm {
         }
     }
 
-    public Asm(String afileName) throws IOException {
+    public Asm(String afileName) {
         fileName = afileName;
     }
-    public Asm parse() throws IOException {
+    public Asm parse() throws FileNotFoundException {
         reader = new LineNumberReader(new FileReader(fileName));
         cv = new ClassWriter(computeFrames? ClassWriter.COMPUTE_FRAMES : 0);  
         try {
@@ -138,11 +133,11 @@ public class Asm {
     private void parseClass() {
         readLine();
         // match class declaration
-        int acc = 0;
         if (!lineMatch(classPattern)) {
             err("Expected .class or .interface declaration");
         }
-        
+
+        int acc = 0;
         if (line.startsWith(".interface")) {
             acc = ACC_INTERFACE;
         }
@@ -165,7 +160,7 @@ public class Asm {
     private int parseModifiers(String s) {
         if (s == null) return 0;
         s = s.trim();
-        if (s.equals("")) return 0;
+        if (s.isEmpty()) return 0;
         int acc = 0;
         for (String modifier : split(wsPattern, s)) {
             if (!modifiers.containsKey(modifier)) {
@@ -266,7 +261,7 @@ public class Asm {
         eofOK = true;
     }
 
-    private static Pattern throwsPattern = Pattern.compile("^ *\\.throws +(" + classNamePatternStr + ")");
+    private static Pattern throwsPattern = Pattern.compile("^ *\\.throws +(" + classNamePatternStr + ')');
 
     private String[] parseMethodExceptions() {
         StringList l = new StringList();
@@ -348,7 +343,7 @@ public class Asm {
 
     private void parseAnnotation() {
         String s = group(2);
-        boolean visible = s == null ? false : s.equals("visible");
+        boolean visible = "visible".equals(s);
         String desc = group(3);
         mv.visitAnnotation(desc, visible);
         readLine();
@@ -394,7 +389,7 @@ public class Asm {
     
     private static boolean computeFrames = true;
 
-    private final static HashMap<String, Integer> opcodeMap      = new HashMap<String, Integer>();
+    private final static HashMap<String, Integer> opcodeMap      = new HashMap<>();
     private final static byte[]                   visitTypes;
     private final static int                      INSN           = 0;
     private final static int                      VAR            = 1;
@@ -444,7 +439,7 @@ public class Asm {
     static final Pattern insnPattern       = Pattern.compile("(\\w+)( +(.*))?");
     static final Pattern quotedPattern     = Pattern.compile("(.*)");
     static final Pattern casePattern       = Pattern.compile("(\\w+) *: *(\\w+)");
-    static final Pattern methodInvokePattern = Pattern.compile("("+ classNamePatternStr + ")[/.](" + methodNamePatternStr + ") *([(].*?[)]" + descPatternStr + ") *(, *\\d+)?");
+    static final Pattern methodInvokePattern = Pattern.compile('(' + classNamePatternStr + ")[/.](" + methodNamePatternStr + ") *([(].*?[)]" + descPatternStr + ") *(, *\\d+)?");
     static final Pattern fieldSpecPattern  = Pattern.compile("([\\w/.$]+)[/.]([\\w$]+) +([^\\s]+)");
 
     private void parseInstructions() {
@@ -481,7 +476,7 @@ public class Asm {
 
             case TABLESWITCH: {
                 int min = parseInt(operand);
-                ArrayList<Label> labelList = new ArrayList<Label>(10);
+                ArrayList<Label> labelList = new ArrayList<>(10);
                 Label defLabel = null;
                 while (true) {
                     readLine();
@@ -499,8 +494,8 @@ public class Asm {
                 break;
             }
             case LOOKUPSWITCH: {
-                ArrayList<Integer> keyList = new ArrayList<Integer>(10);
-                ArrayList<Label> labelList = new ArrayList<Label>(10);
+                ArrayList<Integer> keyList = new ArrayList<>(10);
+                ArrayList<Label> labelList = new ArrayList<>(10);
                 Label defLabel = null;
                 while (true) {
                     readLine();
@@ -568,24 +563,34 @@ public class Asm {
             case INT: {
                 int op = -1;
                 if (opcode == NEWARRAY) {
-                    if (operand.equals("boolean")) {
-                        op = T_BOOLEAN;
-                    } else if (operand.equals("char")) {
-                        op = T_CHAR;
-                    } else if (operand.equals("float")) {
-                        op = T_FLOAT;
-                    } else if (operand.equals("double")) {
-                        op = T_DOUBLE;
-                    } else if (operand.equals("byte")) {
-                        op = T_BYTE;
-                    } else if (operand.equals("short")) {
-                        op = T_SHORT;
-                    } else if (operand.equals("int")) {
-                        op = T_INT;
-                    } else if (operand.equals("long")) {
-                        op = T_LONG;
-                    } else {
-                        err("Unknown type for newarray: " + operand);
+                    switch (operand) {
+                        case "boolean":
+                            op = T_BOOLEAN;
+                            break;
+                        case "char":
+                            op = T_CHAR;
+                            break;
+                        case "float":
+                            op = T_FLOAT;
+                            break;
+                        case "double":
+                            op = T_DOUBLE;
+                            break;
+                        case "byte":
+                            op = T_BYTE;
+                            break;
+                        case "short":
+                            op = T_SHORT;
+                            break;
+                        case "int":
+                            op = T_INT;
+                            break;
+                        case "long":
+                            op = T_LONG;
+                            break;
+                        default:
+                            err("Unknown type for newarray: " + operand);
+                            break;
                     }
                 } else {
                     op = parseInt(operand);
@@ -616,10 +621,10 @@ public class Asm {
     }
     
     private Object parseValue(String s, boolean isDoubleWord) {
-        Object ret = null;
         if (s == null) {
             err("Expected constant value ");
         }
+        Object ret = null;
         if (s.startsWith("\"")) {
             if (isDoubleWord) {
                 err("long or double value expected instead of string");
@@ -634,15 +639,15 @@ public class Asm {
         } else {
             if (s.indexOf('.') == -1) {
                 if (isDoubleWord) {
-                    ret = (Long)parseLong(s);
+                    ret = parseLong(s);
                 } else {
-                    ret = (Integer) parseInt(s);
+                    ret = parseInt(s);
                 }
             } else {
                 if (isDoubleWord) {
-                    ret = (Double)parseDouble(s); 
+                    ret = parseDouble(s);
                 } else {
-                    ret = (Float)parseFloat(s);
+                    ret = parseFloat(s);
                 }
             }
         }
@@ -701,11 +706,7 @@ public class Asm {
         if (s == null) {
             err("Expected label string");
         }
-        Label ret = labels.get(s);
-        if (ret == null) {
-            ret = new Label();
-            labels.put(s, ret);
-        }
+        Label ret = labels.computeIfAbsent(s, k -> new Label());
         return ret;
     }
 
@@ -726,7 +727,7 @@ public class Asm {
             Line l = getLine();
             String s = l.s.trim();
             s = commentPattern.matcher(s).replaceAll("");
-            if (s.length() > 0) {
+            if (!s.isEmpty()) {
                 l.s = s;
                 line = l;
                 return l;
@@ -791,8 +792,8 @@ public class Asm {
         return FileLister.check(fileName,outputName());
     }
     
-    private void write() throws IOException {
-        String dir = outputDir + "/" + getDirName(className);
+    private void write() throws IOException, FileNotFoundException {
+        String dir = outputDir + '/' + getDirName(className);
         mkdir(dir);
         String fileName = outputName();
         FileOutputStream fos = new FileOutputStream(fileName);
@@ -816,19 +817,25 @@ public class Asm {
     }
 
     private static List<String> parseArgs(String[] args) {
-        ArrayList<String> ret = new ArrayList<String>(args.length);
+        ArrayList<String> ret = new ArrayList<>(args.length);
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
-            if (arg.equals("-d")) {
-                outputDir = args[++i];
-            } else if (arg.equals("-q")) {
-                quiet = true;
-            } else if (arg.equals("-f")) {
-                force = true;
-            } else if (arg.equals("-nf")) {
-                computeFrames = false;
-            } else {
-                ret.add(arg);
+            switch (arg) {
+                case "-d":
+                    outputDir = args[++i];
+                    break;
+                case "-q":
+                    quiet = true;
+                    break;
+                case "-f":
+                    force = true;
+                    break;
+                case "-nf":
+                    computeFrames = false;
+                    break;
+                default:
+                    ret.add(arg);
+                    break;
             }
         }
         return ret;

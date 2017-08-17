@@ -6,21 +6,18 @@
 
 package kilim.nio;
 
+import kilim.Mailbox;
+import kilim.Scheduler;
+import kilim.Task;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-
-import kilim.Mailbox;
-import kilim.Pausable;
-import kilim.Scheduler;
-import kilim.Task;
 
 /**
  * This class wraps a selector and runs it in a separate thread.
@@ -56,7 +53,7 @@ public class NioSelectorScheduler {
      * SessionTask registers its endpoint with the selector by sending a SockEvent
      * message on this mailbox. 
      */
-    final Mailbox<SockEvent> regbox = new Mailbox<SockEvent>(1000);
+    final Mailbox<SockEvent> regbox = new Mailbox<>(1000);
     AtomicBoolean update = new AtomicBoolean();
     final private Task regtask;
     volatile boolean running = true;
@@ -93,7 +90,7 @@ public class NioSelectorScheduler {
     
     class SelectorThread extends Thread {
         public SelectorThread() {
-            super("KilimSelector"+":"+Thread.currentThread().getId());
+            super("KilimSelector"+ ':' +Thread.currentThread().getId());
         }
 
         @Override
@@ -111,7 +108,7 @@ public class NioSelectorScheduler {
                                 // TODO FIX: Need a proper, orderly shutdown procedure for tasks. This closes down the task
                                 // irrespective of the thread it may be running on. Terrible.
                                 try {
-                                    ((ServerSocketChannel)((SockEvent)o).ch).close();
+                                    ((SockEvent)o).ch.close();
                                 } catch (IOException ignore) {}
                             }
                         }
@@ -140,7 +137,7 @@ public class NioSelectorScheduler {
     }
 
     public interface SessionFactory {
-        public SessionTask get() throws Exception;
+        SessionTask get();
     }
     class ListenTask extends SessionTask {
         Class<? extends SessionTask> sessionClass;
@@ -148,7 +145,7 @@ public class NioSelectorScheduler {
         ServerSocketChannel          ssc;
         int                          port;
 
-        ListenTask(int port) throws IOException {
+        ListenTask(int port) throws IOException, java.net.SocketException {
             this.port = port;
             this.ssc = ServerSocketChannel.open();
             ssc.socket().setReuseAddress(true);
@@ -159,7 +156,7 @@ public class NioSelectorScheduler {
             // if port is automatically assigned then retrieve actual value
             if(port == 0) {
                 this.port = ssc.socket().getLocalPort();
-            };    
+            }
         }
 
         public String toString() {
@@ -167,7 +164,7 @@ public class NioSelectorScheduler {
         }
 
         @Override
-        public void execute() throws Pausable, Exception {
+        public void execute() throws Exception, IOException, kilim.Pausable, java.net.SocketException, InstantiationException, IllegalAccessException {
             int n = 0;
             while (true) {
                 SocketChannel ch = ssc.accept();
@@ -196,7 +193,7 @@ public class NioSelectorScheduler {
             if (Thread.currentThread() != selectorThread)
                 sel.wakeup();
         }
-        public void execute() throws Pausable, Exception {
+        public void execute() throws kilim.Pausable, java.nio.channels.ClosedChannelException {
             while (true) {
                 SockEvent ev = regbox.get();
                 SelectionKey sk = ev.ch.register(sel, ev.interestOps);

@@ -21,9 +21,9 @@ import kilim.Task;
  * @author sriram@malhar.net
  */
 public class TimedTask extends Task {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws NumberFormatException {
         int numTasks = (args.length > 0) ? Integer.parseInt(args[0]) : 100;
-        Mailbox<ExitMsg> exitmb= new Mailbox<ExitMsg> ();
+        Mailbox<ExitMsg> exitmb= new Mailbox<>();
         
         for (int i = 0; i < numTasks; i++) { 
             new TimedTask().start().informOnExit(exitmb);

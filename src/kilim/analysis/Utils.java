@@ -27,11 +27,11 @@ public class Utils {
     }
 
     public static String format(String s) {
-        if (indentStr.length() == 0)
+        if (indentStr.isEmpty())
             return s;
         int i = s.indexOf('\n'); // i is always the index of newline
         if (i >= 0) {
-            StringBuffer sb = new StringBuffer(100);
+            StringBuilder sb = new StringBuilder(100);
             sb.append(indentStr); // leading indent
             int prev = 0; // prev value of i in loop
             do {
@@ -65,7 +65,7 @@ public class Utils {
     }
 
     public static void pn(int i) {
-        System.out.println(format("" + i));
+        System.out.println(format(String.valueOf(i)));
     }
 
     public static void pn() {

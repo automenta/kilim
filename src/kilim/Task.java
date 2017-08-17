@@ -144,8 +144,7 @@ public abstract class Task implements Runnable, EventSubscriber, Fiber.Worker {
      */
     public static int getStackDepth(Task task) {
         Fiber.MethodRef mr = task.getRunnerInfo();
-        StackTraceElement[] stes;
-        stes = new Exception().getStackTrace();
+        StackTraceElement[] stes = new Exception().getStackTrace();
         int len = stes.length;
         for (int i = 0; i < len; i++) {
             StackTraceElement ste = stes[i];
@@ -209,7 +208,7 @@ public abstract class Task implements Runnable, EventSubscriber, Fiber.Worker {
             return;
         }
         if (exitMBs == null) {
-            exitMBs = new LinkedList<Mailbox<ExitMsg>>();
+            exitMBs = new LinkedList<>();
         }
         exitMBs.add(exit);
     }
@@ -374,7 +373,7 @@ public abstract class Task implements Runnable, EventSubscriber, Fiber.Worker {
      */
     public static void sleep(final long millis) throws Pausable {
         // create a temp mailbox, and wait on it.
-        final Mailbox<Integer> sleepmb = new Mailbox<Integer>(1); // TODO: will
+        final Mailbox<Integer> sleepmb = new Mailbox<>(1); // TODO: will
         // need a
         // better
         // mechanism
@@ -419,11 +418,7 @@ public abstract class Task implements Runnable, EventSubscriber, Fiber.Worker {
     }
 
     public static void pause(PauseReason pauseReason, Fiber f) {
-        if (f.pc == 0) {
-            f.task.setPauseReason(pauseReason);
-        } else {
-            f.task.setPauseReason(null);
-        }
+        f.task.setPauseReason(f.pc == 0 ? pauseReason : null);
         f.togglePause();
         f.task.checkKill();
     }
@@ -444,13 +439,12 @@ public abstract class Task implements Runnable, EventSubscriber, Fiber.Worker {
     }
 
     public String toString() {
-        return "" + id + "(running=" + running + ",pr=" + pauseReason + ")";
+        return id + "(running=" + running + ",pr=" + pauseReason + ')';
     }
 
     public String dump() {
         synchronized (this) {
-            return "" + id + "(running=" + running + ", pr=" + pauseReason
-                    + ")";
+            return id + "(running=" + running + ", pr=" + pauseReason + ')';
         }
     }
 
@@ -554,13 +548,13 @@ public abstract class Task implements Runnable, EventSubscriber, Fiber.Worker {
     }
 
     public ExitMsg joinb() {
-        Mailbox<ExitMsg> mb = new Mailbox<ExitMsg>();
+        Mailbox<ExitMsg> mb = new Mailbox<>();
         informOnExit(mb);
         return mb.getb();
     }
 
     public ExitMsg join() throws Pausable {
-        Mailbox<ExitMsg> mb = new Mailbox<ExitMsg>();
+        Mailbox<ExitMsg> mb = new Mailbox<>();
         informOnExit(mb);
         return mb.get();
     }

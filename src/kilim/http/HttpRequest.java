@@ -6,13 +6,13 @@
 
 package kilim.http;
 
+import kilim.Pausable;
+import kilim.nio.EndPoint;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
-
-import kilim.Pausable;
-import kilim.nio.EndPoint;
 
 /**
  * This object encapsulates a bytebuffer (via HttpMsg). HttpRequestParser creates an instance of this object, but only
@@ -201,14 +201,14 @@ public class HttpRequest extends HttpMsg {
         HttpRequestParser.initHeader(this, headerLength);
         contentOffset = headerLength; // doesn't mean there's necessarily any content.
         String cl = getHeader("Content-Length");
-        if (cl.length() > 0) {
+        if (!cl.isEmpty()) {
             try {
                 contentLength = Integer.parseInt(cl);
             } catch (NumberFormatException nfe) {
                 throw new IOException("Malformed Content-Length hdr");
             }
-        } else if ((getHeader("Transfer-Encoding").indexOf("chunked") >= 0)
-                || (getHeader("TE").indexOf("chunked") >= 0)) {
+        } else if ((getHeader("Transfer-Encoding").contains("chunked"))
+                || (getHeader("TE").contains("chunked"))) {
             contentLength = -1;
         } else {
             contentLength = 0;

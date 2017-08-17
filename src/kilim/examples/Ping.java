@@ -6,17 +6,15 @@
 
 package kilim.examples;
 
+import kilim.Scheduler;
+import kilim.nio.NioSelectorScheduler;
+import kilim.nio.SessionTask;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-
-import kilim.Pausable;
-import kilim.Scheduler;
-import kilim.nio.EndPoint;
-import kilim.nio.NioSelectorScheduler;
-import kilim.nio.SessionTask;
 
 /**
  * Example showing kilim's support for NIO.
@@ -30,7 +28,7 @@ public class Ping {
     static boolean server = false;
     static int port = 7262;
     
-    public static void main(String args[]) throws Exception {
+    public static void main(String args[]) throws IOException {
         if (args.length == 0) {
             usage();
         } else if (args[0].equalsIgnoreCase("-server")) {
@@ -63,7 +61,7 @@ public class Ping {
         }
         
         @Override
-        public void execute() throws Pausable, Exception {
+        public void execute() throws kilim.Pausable {
             System.out.println("[" + this.id + "] Connection rcvd"); 
             try {
                 while (true) {

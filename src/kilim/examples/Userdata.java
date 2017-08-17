@@ -2,9 +2,10 @@
 
 package kilim.examples;
 
-import java.util.stream.Stream;
 import kilim.Pausable;
 import kilim.Task;
+
+import java.util.stream.Stream;
 
 /*
     test of a number of ways of invoking a method that are or look similar to SAMs
@@ -18,25 +19,25 @@ public class Userdata extends Task {
     Eats2 eats2 = new Eats2();
     
     public interface Eats1 {
-        public static String stuff(String foo) { return foo + "-stuff"; }
-        public void insert1(int kfood) throws Pausable;
+        static String stuff(String foo) { return foo + "-stuff"; }
+        void insert1(int kfood);
     }
     public static class Eats1Impl implements Eats1 {
-        public void insert1(int kfood) throws Pausable { System.out.println("gah"); }
+        public void insert1(int kfood) { System.out.println("gah"); }
     }
     public static class Eats2 {
-        public void insert1(int kfood) throws Pausable { System.out.println("foo"); }
-        public void insert2(int kfood) throws Pausable {}
+        public void insert1(int kfood) { System.out.println("foo"); }
+        public void insert2(int kfood) {}
     }
     public static class Eats3 {
-        public void insert1(int kfood) throws Pausable { System.out.println("bar"); }
+        public void insert1(int kfood) { System.out.println("bar"); }
     }
     public interface Eats4 {
-        public static String fluff(String foo) { return foo + "-fluff"; }
-        public void insert1(int kfood) throws Pausable;
+        static String fluff(String foo) { return foo + "-fluff"; }
+        void insert1(int kfood);
     }
     public interface Eats5 extends Eats4 {
-        public static void buff(int kfood) throws Pausable { System.out.println(Eats4.fluff("fox-"+kfood)); }
+        static void buff(int kfood) { System.out.println(Eats4.fluff("fox-"+kfood)); }
     }
     public static void eater(Eats4 eat,int kfood) throws Pausable {
         eat.insert1(kfood);

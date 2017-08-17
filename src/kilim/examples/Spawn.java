@@ -11,7 +11,7 @@ import kilim.Task;
 public class  Spawn {
     public static void main(String[] args) throws Exception {
         // mb is captured by all lambdas.
-        Mailbox<String> mb = new Mailbox<String>();
+        Mailbox<String> mb = new Mailbox<>();
         
         //Consumer
         Task.spawn( () -> {

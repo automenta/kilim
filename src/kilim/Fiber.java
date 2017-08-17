@@ -7,6 +7,7 @@
 package kilim;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 /**
  * This class serves as a context to manage and store the continuation stack.
@@ -89,8 +90,8 @@ public final class Fiber {
         PAUSE_STATE.pc = 1;
     }
 
-    public static class MethodRef {
-        String classname, methodname;
+    public static final class MethodRef {
+        final String classname, methodname;
         public MethodRef(String cn,String mn) { classname = cn; methodname = mn; }
     }
     
@@ -114,7 +115,7 @@ public final class Fiber {
     public void reset() {
         curState = null;
         pc = 0;
-        for (int ii=0; ii<stateStack.length; ii++) stateStack[ii] = null;
+        Arrays.fill(stateStack, null);
         iStack = -1;
         isPausing = false;
         isDone = false;
@@ -193,7 +194,7 @@ public final class Fiber {
      * end() is the last up(). returns true if the fiber is not pausing.
      */
     public final boolean end() {
-        assert iStack == 0 : "Reset: Expected iStack == 0, not " + iStack + "\n" + this;
+        assert iStack == 0 : "Reset: Expected iStack == 0, not " + iStack + '\n' + this;
         boolean isDone = !isPausing;
         
         if (isDone) {

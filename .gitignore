@@ -6,3 +6,5 @@
 /demos/jetty/nb-configuration.xml
 /nb-configuration.xml
 /plugins/maven/nb-configuration.xml
+.idea
+*.iml

@@ -5,6 +5,10 @@
  */
 package kilim.nio;
 
+import kilim.Mailbox;
+import kilim.Pausable;
+import kilim.Task;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,10 +16,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
-
-import kilim.Mailbox;
-import kilim.Pausable;
-import kilim.Task;
 
 /**
  * The EndPoint represents an open socket connection. It is a wrapper over a non-blocking socket (channel) and belongs
@@ -43,7 +43,7 @@ public class EndPoint { // Mailbox for receiving socket ready events.
      */
     public AbstractSelectableChannel sockch;
 
-    private Mailbox<SockEvent> box = new Mailbox<SockEvent>();
+    private Mailbox<SockEvent> box = new Mailbox<>();
     private NioSelectorScheduler sched;
 
 
@@ -94,7 +94,7 @@ public class EndPoint { // Mailbox for receiving socket ready events.
      *            At least this many bytes to be read.
      * @throws IOException
      */
-    public ByteBuffer fill(ByteBuffer buf, int atleastN) throws IOException, Pausable {
+    public ByteBuffer fill(ByteBuffer buf, int atleastN) throws IOException, Pausable, EOFException {
         if (buf.remaining() < atleastN) {
             ByteBuffer newbb = ByteBuffer.allocate(Math.max(buf.capacity() * 3 / 2, buf.position() + atleastN));
             buf.rewind();
@@ -149,8 +149,8 @@ public class EndPoint { // Mailbox for receiving socket ready events.
         int pos = bb.position();
         int opos = pos; // save orig pos 
         bb = fill(bb, lengthLength);
-        byte a, b, c, d;
-        a = b = c = d = 0;
+        byte b, c, d;
+        byte a = b = c = d = 0;
         switch (lengthLength) {
             case 4: a = bb.get(pos); pos++;   
                     b = bb.get(pos); pos++;  // fall through
@@ -172,17 +172,17 @@ public class EndPoint { // Mailbox for receiving socket ready events.
     }
 
     // TODO. Need to introduce session timeouts for read and write
-    public void pauseUntilReadable() throws Pausable, IOException {
+    public void pauseUntilReadable() throws Pausable {
         SockEvent ev = new SockEvent(box, sockch, SelectionKey.OP_READ);
         sched.regbox.putnb(ev);
         box.get();
     }
-    public void pauseUntilWritable() throws Pausable, IOException {
+    public void pauseUntilWritable() throws Pausable {
         SockEvent ev = new SockEvent(box, sockch, SelectionKey.OP_WRITE);
         sched.regbox.putnb(ev);
         box.get();
     }
-    public void pauseUntilAcceptable() throws Pausable, IOException {
+    public void pauseUntilAcceptable() throws Pausable {
         SockEvent ev = new SockEvent(box, sockch, SelectionKey.OP_ACCEPT);
         sched.regbox.putnb(ev);
         box.get();

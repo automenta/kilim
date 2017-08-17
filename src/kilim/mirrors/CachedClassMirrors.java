@@ -2,21 +2,15 @@
 
 package kilim.mirrors;
 
+import kilim.KilimClassLoader;
+import kilim.WeavingClassLoader;
+import org.objectweb.asm.*;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import kilim.KilimClassLoader;
-import kilim.WeavingClassLoader;
-
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 
 /**
@@ -27,7 +21,7 @@ import org.objectweb.asm.Opcodes;
 public class CachedClassMirrors {
     final static String[] EMPTY_SET = new String[0];
     
-    ConcurrentHashMap<String,ClassMirror> cachedClasses = new ConcurrentHashMap<String, ClassMirror>();
+    ConcurrentHashMap<String,ClassMirror> cachedClasses = new ConcurrentHashMap<>();
     private final KilimClassLoader loader;
     final ClassLoader source;
 
@@ -146,11 +140,11 @@ public class CachedClassMirrors {
             return declaredMethods = new MethodMirror[0];
         }
 
-        public String[] getInterfaces() throws ClassMirrorNotFoundException {
+        public String[] getInterfaces() {
             return interfaceNames;
         }
 
-        public String getSuperclass() throws ClassMirrorNotFoundException {
+        public String getSuperclass() {
             return superName;
         }
 
@@ -198,7 +192,7 @@ public class CachedClassMirrors {
                 if (name.equals("<init>")) return null;
                 if (name.equals("<clinit>")) return null;
                 if (tmpMethodList == null) {
-                    tmpMethodList = new ArrayList<CachedClassMirrors.MethodMirror>();
+                    tmpMethodList = new ArrayList<>();
                 }
                 MethodMirror mirror = new MethodMirror(access, name, desc, map(exceptions));
                 tmpMethodList.add(mirror);

@@ -103,7 +103,7 @@ public class Usage {
         BitSet out = new BitSet(nLocals);
         BitSet old_in = (BitSet) in.clone();
         if (handUsage==null) handUsage = new ArrayList();
-        if (succUsage.size() == 0) {
+        if (succUsage.isEmpty()) {
             in = use;
         } else {
             // calculate out = U succ.in

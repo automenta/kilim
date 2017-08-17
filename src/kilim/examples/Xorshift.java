@@ -7,10 +7,10 @@
 package kilim.examples;
 
 
+import kilim.Continuation;
 import kilim.Fiber;
 import kilim.Generator;
 import kilim.Pausable;
-import kilim.Continuation;
 
 /**
  *  a demo and benchmark of kilim generators used to implement the xorshift PRNG
@@ -31,8 +31,8 @@ public class Xorshift {
         try { cycles = Long.parseLong(args[0]); } catch (Exception ex) {}
         try { reps = Integer.parseInt(args[1]); } catch (Exception ex) {}
         boolean pure = true;
-        int dual = 1;
         if (args.length > 2 && args[2].equals("gen")) pure = false;
+        int dual = 1;
         if (args.length > 2 && args[2].equals("dual")) dual = 10;
 
         for (int kk=0; kk < dual; kk++, pure=!pure) {
@@ -52,11 +52,11 @@ public class Xorshift {
     interface Loop { long loop(long num); }
     
     public static class X1 extends Generator<Long> implements Loop {
-        public void execute() throws Pausable,Exception {
-            long x, y, s0=103, s1=17;
+        public void execute() throws Pausable {
+            long s0=103, s1=17;
             while (true) {
-                x = s0;
-                y = s1;
+                long x = s0;
+                long y = s1;
                 s0 = y;
                 x ^= (x << 23);
                 s1 = x ^ y ^ (x >> 17) ^ (y >> 26);
@@ -74,10 +74,10 @@ public class Xorshift {
     public static class X2 extends Continuation implements Loop {
         long result;
         public void execute() throws Pausable {
-            long x, y, s0=103, s1=17;
+            long s0=103, s1=17;
             while (true) {
-                x = s0;
-                y = s1;
+                long x = s0;
+                long y = s1;
                 s0 = y;
                 x ^= (x << 23);
                 s1 = x ^ y ^ (x >> 17) ^ (y >> 26);

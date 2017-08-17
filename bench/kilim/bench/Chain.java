@@ -6,7 +6,9 @@
 
 package kilim.bench;
 
-import kilim.*;
+import kilim.Mailbox;
+import kilim.Pausable;
+import kilim.Task;
 
 public class Chain extends Task {
     static class Mbx extends Mailbox<Integer>{}
@@ -16,7 +18,7 @@ public class Chain extends Task {
     Mbx  mymb, nextmb;
     static long startTime;
     
-    static Mailbox<Integer> signalMbx = new Mailbox<Integer>();
+    static Mailbox<Integer> signalMbx = new Mailbox<>();
     
     
     public static void main(String[] args) {

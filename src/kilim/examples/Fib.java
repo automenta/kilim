@@ -6,10 +6,10 @@
 
 package kilim.examples;
 
-import java.math.BigInteger;
-
 import kilim.Generator;
 import kilim.Pausable;
+
+import java.math.BigInteger;
 
 /**
  * This example prints the nth Fibonacci number.
@@ -33,7 +33,7 @@ public class Fib extends Generator<BigInteger> {
             fib.next();
         }
         // .. and print the last one
-        System.out.println("" + n + " : " + fib.next());
+        System.out.println(n + " : " + fib.next());
     }
 
     public void execute() throws Pausable {

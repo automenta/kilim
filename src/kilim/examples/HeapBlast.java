@@ -6,9 +6,10 @@
 
 package kilim.examples;
 
-import java.util.Random;
 import kilim.timerservice.Timer;
 import kilim.timerservice.TimerPriorityHeap;
+
+import java.util.Random;
 
 public class HeapBlast {
     

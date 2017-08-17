@@ -6,7 +6,9 @@
 
 package kilim.bench;
 
-import kilim.*;
+import kilim.Mailbox;
+import kilim.Pausable;
+import kilim.Task;
 
 public class Ring extends Task {
     Mailbox<String> mb;
@@ -22,12 +24,16 @@ public class Ring extends Task {
         try {
             for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
-                if (arg.equals("-n")) {
-                    n = Integer.parseInt(args[++i]);
-                } else if (arg.equals("-t")) {
-                    t = Integer.parseInt(args[++i]);
-                } else if (arg.equals("-l")) {
-                    logging = true;
+                switch (arg) {
+                    case "-n":
+                        n = Integer.parseInt(args[++i]);
+                        break;
+                    case "-t":
+                        t = Integer.parseInt(args[++i]);
+                        break;
+                    case "-l":
+                        logging = true;
+                        break;
                 }
             }
         } 
@@ -35,14 +41,14 @@ public class Ring extends Task {
             System.err.println("Integer argument expected");
         }
         if (logging) System.out.println("Started");
-        Mailbox<String> mb = new Mailbox<String>();
+        Mailbox<String> mb = new Mailbox<>();
         Mailbox<String> startmb = mb;
         Ring r = new Ring(mb, null, 0, t);
         r.start();
         Ring start = r;
         Mailbox<String> prevmb = mb;
         for (int i = 1; i < n; i++) {
-            mb = new Mailbox<String>();
+            mb = new Mailbox<>();
             new Ring(mb, prevmb,  i, t).start();
             prevmb = mb;
         }

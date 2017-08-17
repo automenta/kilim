@@ -6,12 +6,12 @@
 
 package kilim.analysis;
 
-import static org.objectweb.asm.Opcodes.NOP;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.tree.AbstractInsnNode;
 
 import java.util.Map;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.tree.AbstractInsnNode;
+import static org.objectweb.asm.Opcodes.NOP;
 
 class NopInsn extends AbstractInsnNode {
     public NopInsn() {

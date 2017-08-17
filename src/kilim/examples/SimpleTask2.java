@@ -19,8 +19,8 @@ import kilim.Task;
  * [run]     java -cp ./classes:./classes:$CLASSPATH  kilim.examples.SimpleTask2
  */
 public class SimpleTask2 extends Task {
-    static Mailbox<String> mb = new Mailbox<String>();
-    static Mailbox<ExitMsg> exitmb = new Mailbox<ExitMsg>();
+    static Mailbox<String> mb = new Mailbox<>();
+    static Mailbox<ExitMsg> exitmb = new Mailbox<>();
     
     public static void main(String[] args) throws Exception {
         Task t = new SimpleTask2().start();

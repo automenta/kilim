@@ -2,6 +2,10 @@
 
 package kilim.tools;
 
+import kilim.analysis.ClassInfo;
+
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -11,11 +15,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
-
-import kilim.analysis.ClassInfo;
 
 /**
  * Simple utility class to invoke the java compiler.
@@ -66,14 +65,14 @@ public class Javac {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         compiler.run(null, null, null, args);
 
-        List<ClassInfo> ret = new ArrayList<ClassInfo>();
+        List<ClassInfo> ret = new ArrayList<>();
         addClasses(ret, "", classDir);
         deleteDir(rootDir);
         return ret;
     }
 
     private static List<SourceInfo> getSourceInfos(List<String> srcCodes) {
-        List<SourceInfo> srcInfos = new ArrayList<SourceInfo>(srcCodes.size());
+        List<SourceInfo> srcInfos = new ArrayList<>(srcCodes.size());
         for (String srcCode : srcCodes) {
             srcInfos.add(getSourceInfo(srcCode));
         }
@@ -93,7 +92,7 @@ public class Javac {
                 return new SourceInfo(m.group(1), srcCode);
             else
                 throw new IllegalArgumentException(
-                        "No class or interface definition found in src: \n'" + srcCode + "'");
+                        "No class or interface definition found in src: \n'" + srcCode + '\'');
         }
     }
 
@@ -133,7 +132,7 @@ public class Javac {
         for (File f : dir.listFiles()) {
             String fname = f.getName();
             if (f.isDirectory()) {
-                String qname = pkgName + fname + ".";
+                String qname = pkgName + fname + '.';
                 addClasses(ret, qname, f);
             } else if (fname.endsWith(".class")) {
                 String qname = pkgName + fname.substring(0, fname.length() - 6);
@@ -144,7 +143,7 @@ public class Javac {
         }
     }
 
-    private static byte[] readFile(File f) throws IOException {
+    private static byte[] readFile(File f) throws IOException, java.io.FileNotFoundException {
         int len = (int) f.length();
         byte[] buf = new byte[len];
         FileInputStream fis = new FileInputStream(f);
@@ -159,7 +158,7 @@ public class Javac {
         return buf;
     }
 
-    private static void writeFile(File f, byte[] srcCode) throws IOException {
+    private static void writeFile(File f, byte[] srcCode) throws IOException, java.io.FileNotFoundException {
         FileOutputStream fos = new FileOutputStream(f);
         fos.write(srcCode);
         fos.close();

@@ -6,13 +6,15 @@
 
 package kilim.bench;
 
-import kilim.*;
+import kilim.Fiber;
+import kilim.Pausable;
+import kilim.Task;
 
 
 public class Unwind extends Task {
     static boolean pause = false;
     static boolean pausable = false;
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception, NumberFormatException {
         int n = Integer.parseInt(args[0]);
         pausable = true;
         
@@ -63,13 +65,13 @@ public class Unwind extends Task {
     }
 
     private void echo(int x) throws Pausable {
-        long l = x - (x - 2);
-        String foo = new String("foo");
-        String bar = "bar";
         if (pause) {
             Task.yield();
         }
+        String foo = "foo";
+        long l = x - (x - 2);
         foo.charAt((int)l);
+        String bar = "bar";
         bar.charAt((int)l);
     }
 
@@ -81,9 +83,9 @@ public class Unwind extends Task {
 
     public void echoNoPause(int x) {
         long l = x - (x - 2);
-        String foo = new String("foo");
-        String bar = "bar";
+        String foo = "foo";
         foo.charAt((int)l);
+        String bar = "bar";
         bar.charAt((int)l);
     }
 }

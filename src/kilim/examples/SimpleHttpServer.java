@@ -6,16 +6,11 @@
 
 package kilim.examples;
 
+import kilim.http.*;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.PrintWriter;
-
-import kilim.Pausable;
-import kilim.http.HttpRequest;
-import kilim.http.HttpResponse;
-import kilim.http.HttpServer;
-import kilim.http.HttpSession;
-import kilim.http.KeyValues;
 
 /**
  * A basic HTTP server that merely echoes the path and the query string supplied to it in a GET request
@@ -44,7 +39,7 @@ public class SimpleHttpServer {
     public static class SimpleHttpSession extends HttpSession {
 
         @Override
-        public void execute() throws Pausable, Exception {
+        public void execute() throws kilim.Pausable {
             try {
                 // We will reuse the req and resp objects
                 HttpRequest req = new HttpRequest();

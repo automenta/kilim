@@ -6,12 +6,12 @@ package kilim.http;
  * specified in the file "License"
  */
 
+import kilim.Pausable;
+import kilim.nio.SessionTask;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import kilim.Pausable;
-import kilim.nio.SessionTask;
 
 /**
  * Responsible for creating an HTTPRequest object out of raw bytes from a socket, and for sending an HTTPResponse object
@@ -75,12 +75,12 @@ public class HttpSession extends SessionTask {
     }
 
     public interface StringRouter {
-        public String route(HttpRequest req) throws Pausable;
+        String route(HttpRequest req);
     }
     public static class StringSession extends HttpSession {
         StringRouter handler;
         public StringSession(StringRouter handler) { this.handler = handler; }
-        public void execute() throws Pausable, Exception {
+        public void execute() throws Exception {
             try {
                 // We will reuse the req and resp objects
                 HttpRequest req = new HttpRequest();

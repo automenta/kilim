@@ -12,7 +12,7 @@ import java.io.PipedOutputStream;
 
 // Create two threads, have a message ping pong between them using pipes.
 public class ThreadPipePingPong {
-    public static void main(String args[]) throws Exception {
+    public static void main(String args[]) throws NumberFormatException, java.io.IOException {
         int ntimes = args.length == 0 ? 1000 : Integer.parseInt(args[0]);
         PipedInputStream  pi_in = new PipedInputStream();
         PipedOutputStream pi_out = new PipedOutputStream();

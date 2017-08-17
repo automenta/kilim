@@ -12,7 +12,6 @@ public class Ex_vs_Ret {
      * @param args
      */
     public static void main(String[] args) {
-        final int ntimes = 1000000;
         final int depth = 10;
 
         // JIT Warmup ===========================================
@@ -24,6 +23,7 @@ public class Ex_vs_Ret {
         }
 
         long start = System.currentTimeMillis();
+        final int ntimes = 1000000;
         for (int i = 0; i < ntimes; i++) {
             ret(depth);
         }

@@ -14,13 +14,13 @@ package kilim.http;
  * specification file HttpRequestParser.rl. All changes must be made in the .rl file.
  **/
 
-import java.util.TimeZone;
-import java.util.GregorianCalendar;
-import java.nio.charset.Charset;
-import java.nio.ByteBuffer;
-import java.io.UnsupportedEncodingException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 public class HttpRequestParser {
   public static final Charset UTF8 = Charset.forName("UTF-8");
@@ -204,17 +204,12 @@ static final int http_parser_en_main = 1;
     ByteBuffer bb = req.buffer;
     /* required variables */
     byte[] data = bb.array();
-    int p = 0;
-    int pe = headerLength;
-//  int eof = pe;
+      //  int eof = pe;
     int cs = 0;
 
     // variables used by actions in http_req_parser machine above.
-    int query_start = 0;
-    int mark = 0;
-    String field_name = "";
 
-    
+
 // line 219 "HttpRequestParser.java"
 	{
 	cs = http_parser_start;
@@ -223,15 +218,16 @@ static final int http_parser_en_main = 1;
 // line 158 "HttpRequestParser.rl"
     
 // line 226 "HttpRequestParser.java"
-	{
-	int _klen;
-	int _trans = 0;
-	int _acts;
-	int _nacts;
-	int _keys;
-	int _goto_targ = 0;
+      int p = 0;
+      {
+        int _trans = 0;
+        int _goto_targ = 0;
 
-	_goto: while (true) {
+        String field_name = "";
+        int mark = 0;
+        int query_start = 0;
+        int pe = headerLength;
+        _goto: while (true) {
 	switch ( _goto_targ ) {
 	case 0:
 	if ( p == pe ) {
@@ -244,19 +240,18 @@ static final int http_parser_en_main = 1;
 	}
 case 1:
 	_match: do {
-	_keys = _http_parser_key_offsets[cs];
-	_trans = _http_parser_index_offsets[cs];
-	_klen = _http_parser_single_lengths[cs];
-	if ( _klen > 0 ) {
+        int _keys = _http_parser_key_offsets[cs];
+        _trans = _http_parser_index_offsets[cs];
+        int _klen = _http_parser_single_lengths[cs];
+        if ( _klen > 0 ) {
 		int _lower = _keys;
-		int _mid;
-		int _upper = _keys + _klen - 1;
+        int _upper = _keys + _klen - 1;
 		while (true) {
 			if ( _upper < _lower )
 				break;
 
-			_mid = _lower + ((_upper-_lower) >> 1);
-			if ( data[p] < _http_parser_trans_keys[_mid] )
+            int _mid = _lower + ((_upper - _lower) >> 1);
+            if ( data[p] < _http_parser_trans_keys[_mid] )
 				_upper = _mid - 1;
 			else if ( data[p] > _http_parser_trans_keys[_mid] )
 				_lower = _mid + 1;
@@ -272,14 +267,13 @@ case 1:
 	_klen = _http_parser_range_lengths[cs];
 	if ( _klen > 0 ) {
 		int _lower = _keys;
-		int _mid;
-		int _upper = _keys + (_klen<<1) - 2;
+        int _upper = _keys + (_klen<<1) - 2;
 		while (true) {
 			if ( _upper < _lower )
 				break;
 
-			_mid = _lower + (((_upper-_lower) >> 1) & ~1);
-			if ( data[p] < _http_parser_trans_keys[_mid] )
+            int _mid = _lower + (((_upper - _lower) >> 1) & ~1);
+            if ( data[p] < _http_parser_trans_keys[_mid] )
 				_upper = _mid - 2;
 			else if ( data[p] > _http_parser_trans_keys[_mid+1] )
 				_lower = _mid + 2;
@@ -296,9 +290,9 @@ case 1:
 	cs = _http_parser_trans_targs[_trans];
 
 	if ( _http_parser_trans_actions[_trans] != 0 ) {
-		_acts = _http_parser_trans_actions[_trans];
-		_nacts = (int) _http_parser_actions[_acts++];
-		while ( _nacts-- > 0 )
+        int _acts = _http_parser_trans_actions[_trans];
+        int _nacts = _http_parser_actions[_acts++];
+        while ( _nacts-- > 0 )
 	{
 			switch ( _http_parser_actions[_acts++] )
 			{
@@ -959,36 +953,34 @@ static final int http_keywords_en_main = 307;
   @SuppressWarnings("unused")
   public static String kw_lookup(byte[] data, int start, int len) {
 //    String req = null;
-    int ts, te, act;
+    int ts, te;
 
 //    int wb = 0;
-    int p = start;
-    int pe = start + len;
-    int eof = pe;
-    int cs;
-    String kw = null;
-    
+      int pe = start + len;
+      int cs;
+
 // line 972 "HttpRequestParser.java"
 	{
 	cs = http_keywords_start;
 	ts = -1;
 	te = -1;
-	act = 0;
-	}
+        int act = 0;
+    }
 
 // line 240 "HttpRequestParser.rl"
     
 // line 982 "HttpRequestParser.java"
-	{
-	int _klen;
-	int _trans = 0;
-	int _acts;
-	int _nacts;
-	int _keys;
-	int _goto_targ = 0;
+      String kw = null;
+      {
+        int _trans = 0;
+        int _goto_targ = 0;
 
-	_goto: while (true) {
-	switch ( _goto_targ ) {
+          int eof = pe;
+          int p = start;
+          _goto: while (true) {
+        int _nacts;
+        int _acts;
+        switch ( _goto_targ ) {
 	case 0:
 	if ( p == pe ) {
 		_goto_targ = 4;
@@ -1000,7 +992,7 @@ static final int http_keywords_en_main = 307;
 	}
 case 1:
 	_acts = _http_keywords_from_state_actions[cs];
-	_nacts = (int) _http_keywords_actions[_acts++];
+	_nacts = _http_keywords_actions[_acts++];
 	while ( _nacts-- > 0 ) {
 		switch ( _http_keywords_actions[_acts++] ) {
 	case 1:
@@ -1012,19 +1004,18 @@ case 1:
 	}
 
 	_match: do {
-	_keys = _http_keywords_key_offsets[cs];
-	_trans = _http_keywords_index_offsets[cs];
-	_klen = _http_keywords_single_lengths[cs];
-	if ( _klen > 0 ) {
+        int _keys = _http_keywords_key_offsets[cs];
+        _trans = _http_keywords_index_offsets[cs];
+        int _klen = _http_keywords_single_lengths[cs];
+        if ( _klen > 0 ) {
 		int _lower = _keys;
-		int _mid;
-		int _upper = _keys + _klen - 1;
+        int _upper = _keys + _klen - 1;
 		while (true) {
 			if ( _upper < _lower )
 				break;
 
-			_mid = _lower + ((_upper-_lower) >> 1);
-			if ( data[p] < _http_keywords_trans_keys[_mid] )
+            int _mid = _lower + ((_upper - _lower) >> 1);
+            if ( data[p] < _http_keywords_trans_keys[_mid] )
 				_upper = _mid - 1;
 			else if ( data[p] > _http_keywords_trans_keys[_mid] )
 				_lower = _mid + 1;
@@ -1040,14 +1031,13 @@ case 1:
 	_klen = _http_keywords_range_lengths[cs];
 	if ( _klen > 0 ) {
 		int _lower = _keys;
-		int _mid;
-		int _upper = _keys + (_klen<<1) - 2;
+        int _upper = _keys + (_klen<<1) - 2;
 		while (true) {
 			if ( _upper < _lower )
 				break;
 
-			_mid = _lower + (((_upper-_lower) >> 1) & ~1);
-			if ( data[p] < _http_keywords_trans_keys[_mid] )
+            int _mid = _lower + (((_upper - _lower) >> 1) & ~1);
+            if ( data[p] < _http_keywords_trans_keys[_mid] )
 				_upper = _mid - 2;
 			else if ( data[p] > _http_keywords_trans_keys[_mid+1] )
 				_lower = _mid + 2;
@@ -1065,7 +1055,7 @@ case 3:
 
 	if ( _http_keywords_trans_actions[_trans] != 0 ) {
 		_acts = _http_keywords_trans_actions[_trans];
-		_nacts = (int) _http_keywords_actions[_acts++];
+		_nacts = _http_keywords_actions[_acts++];
 		while ( _nacts-- > 0 )
 	{
 			switch ( _http_keywords_actions[_acts++] )
@@ -1273,7 +1263,7 @@ case 3:
 
 case 2:
 	_acts = _http_keywords_to_state_actions[cs];
-	_nacts = (int) _http_keywords_actions[_acts++];
+	_nacts = _http_keywords_actions[_acts++];
 	while ( _nacts-- > 0 ) {
 		switch ( _http_keywords_actions[_acts++] ) {
 	case 0:
@@ -1497,15 +1487,11 @@ static final int http_date_en_main = 1;
     public static TimeZone GMT = TimeZone.getTimeZone("GMT");
 
   public static long parseDate(byte[] data, int pos, int len) {
-    int p = 0;
-    int pe = len;
-//    int eof = pe;
+      //    int eof = pe;
     int cs;
 //    int wkday = 0;
-    int day = 0, month = 0, year = 0;
-    int hh = 0, mm = 0, ss = 0;
-        
-    
+
+
 // line 1510 "HttpRequestParser.java"
 	{
 	cs = http_date_start;
@@ -1514,15 +1500,19 @@ static final int http_date_en_main = 1;
 // line 299 "HttpRequestParser.rl"
     
 // line 1517 "HttpRequestParser.java"
-	{
-	int _klen;
-	int _trans = 0;
-	int _acts;
-	int _nacts;
-	int _keys;
-	int _goto_targ = 0;
+      int ss = 0;
+      int mm = 0;
+      int hh = 0;
+      int year = 0;
+      int month = 0;
+      int day = 0;
+      {
+        int _trans = 0;
+        int _goto_targ = 0;
 
-	_goto: while (true) {
+          int pe = len;
+          int p = 0;
+          _goto: while (true) {
 	switch ( _goto_targ ) {
 	case 0:
 	if ( p == pe ) {
@@ -1535,19 +1525,18 @@ static final int http_date_en_main = 1;
 	}
 case 1:
 	_match: do {
-	_keys = _http_date_key_offsets[cs];
-	_trans = _http_date_index_offsets[cs];
-	_klen = _http_date_single_lengths[cs];
-	if ( _klen > 0 ) {
+        int _keys = _http_date_key_offsets[cs];
+        _trans = _http_date_index_offsets[cs];
+        int _klen = _http_date_single_lengths[cs];
+        if ( _klen > 0 ) {
 		int _lower = _keys;
-		int _mid;
-		int _upper = _keys + _klen - 1;
+        int _upper = _keys + _klen - 1;
 		while (true) {
 			if ( _upper < _lower )
 				break;
 
-			_mid = _lower + ((_upper-_lower) >> 1);
-			if ( data[p] < _http_date_trans_keys[_mid] )
+            int _mid = _lower + ((_upper - _lower) >> 1);
+            if ( data[p] < _http_date_trans_keys[_mid] )
 				_upper = _mid - 1;
 			else if ( data[p] > _http_date_trans_keys[_mid] )
 				_lower = _mid + 1;
@@ -1563,14 +1552,13 @@ case 1:
 	_klen = _http_date_range_lengths[cs];
 	if ( _klen > 0 ) {
 		int _lower = _keys;
-		int _mid;
-		int _upper = _keys + (_klen<<1) - 2;
+        int _upper = _keys + (_klen<<1) - 2;
 		while (true) {
 			if ( _upper < _lower )
 				break;
 
-			_mid = _lower + (((_upper-_lower) >> 1) & ~1);
-			if ( data[p] < _http_date_trans_keys[_mid] )
+            int _mid = _lower + (((_upper - _lower) >> 1) & ~1);
+            if ( data[p] < _http_date_trans_keys[_mid] )
 				_upper = _mid - 2;
 			else if ( data[p] > _http_date_trans_keys[_mid+1] )
 				_lower = _mid + 2;
@@ -1586,9 +1574,9 @@ case 1:
 	cs = _http_date_trans_targs[_trans];
 
 	if ( _http_date_trans_actions[_trans] != 0 ) {
-		_acts = _http_date_trans_actions[_trans];
-		_nacts = (int) _http_date_actions[_acts++];
-		while ( _nacts-- > 0 )
+        int _acts = _http_date_trans_actions[_trans];
+        int _nacts = _http_date_actions[_acts++];
+        while ( _nacts-- > 0 )
 	{
 			switch ( _http_date_actions[_acts++] )
 			{
@@ -1692,7 +1680,7 @@ case 5:
 
 
   public static String crlf = "\r\n";
-  public static void main(String args[]) throws Exception {
+  public static void main(String args[]) throws IOException {
     /// Testing
     String s = 
       "GET /favicon.ico#test HTTP/1.1\r\n" +

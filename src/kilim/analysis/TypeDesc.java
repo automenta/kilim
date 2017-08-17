@@ -6,27 +6,15 @@
 
 package kilim.analysis;
 
-import static kilim.Constants.D_BOOLEAN;
-import static kilim.Constants.D_BYTE;
-import static kilim.Constants.D_CHAR;
-import static kilim.Constants.D_DOUBLE;
-import static kilim.Constants.D_FLOAT;
-import static kilim.Constants.D_INT;
-import static kilim.Constants.D_LONG;
-import static kilim.Constants.D_NULL;
-import static kilim.Constants.D_OBJECT;
-import static kilim.Constants.D_SHORT;
-import static kilim.Constants.D_STRING;
-import static kilim.Constants.D_UNDEFINED;
+import kilim.Constants;
+import kilim.mirrors.ClassMirrorNotFoundException;
+import kilim.mirrors.Detector;
+import org.objectweb.asm.Type;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
-import kilim.Constants;
-import kilim.mirrors.ClassMirrorNotFoundException;
-import kilim.mirrors.Detector;
-
-import org.objectweb.asm.Type;
+import static kilim.Constants.*;
 
 /**
  * A utility class that provides static methods for interning type strings and merging type
@@ -34,7 +22,7 @@ import org.objectweb.asm.Type;
  * 
  */
 public class TypeDesc {
-    static final HashMap<String, String> knownTypes = new HashMap<String, String>(30);
+    static final HashMap<String, String> knownTypes = new HashMap<>(30);
 
     static {
         Field[] fields = Constants.class.getFields();
@@ -65,7 +53,7 @@ public class TypeDesc {
             case '[':
                 return desc;
             default:
-                return "L" + desc + ';';
+                return 'L' + desc + ';';
             }
         } else {
             return ret;
@@ -73,7 +61,7 @@ public class TypeDesc {
     }
 
     public static String getReturnTypeDesc(String desc) {
-        return getInterned(desc.substring(desc.indexOf(")") + 1));
+        return getInterned(desc.substring(desc.indexOf(')') + 1));
     }
 
     static boolean isSingleWord(String desc) {
@@ -172,7 +160,6 @@ public class TypeDesc {
             return b;
         if (b == D_UNDEFINED)
             return a;
-        char ac = a.charAt(0);
         char bc = b.charAt(0);
         if (a == D_NULL) {
             assert b == D_NULL || bc == 'L' || bc == '[' : "merging NULL type with non ref type: "
@@ -186,6 +173,7 @@ public class TypeDesc {
         }
         if (a == b || a.equals(b))
             return a;
+        char ac = a.charAt(0);
         switch (ac) {
         case 'N': // D_NULL
             if (bc == 'L')
@@ -203,7 +191,7 @@ public class TypeDesc {
         case '[':
             if (bc == '[') {
                 try {
-                    return "["
+                    return '['
                             + mergeType(det, TypeDesc.getComponentType(a), TypeDesc.getComponentType(b));
                 } catch (IncompatibleTypesException ite) {
                     // The component types are incompatible, but two disparate arrays still
@@ -230,7 +218,7 @@ public class TypeDesc {
             }
             break;
         }
-        throw new IncompatibleTypesException("" + a + "," + b);
+        throw new IncompatibleTypesException(a + ',' + b);
     }
 
     static String JAVA_LANG_OBJECT = "java.lang.Object";
@@ -248,7 +236,7 @@ public class TypeDesc {
 
             if (lub.equals("java/lang/Object"))
             	return D_OBJECT;
-            return "L" + lub + ";";
+            return 'L' + lub + ';';
 
         } catch (ClassMirrorNotFoundException cnfe) {
             throw new InternalError(cnfe.getMessage());

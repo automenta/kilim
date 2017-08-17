@@ -6,9 +6,9 @@
 
 package kilim.nio;
 
-import java.nio.channels.spi.AbstractSelectableChannel;
-
 import kilim.Mailbox;
+
+import java.nio.channels.spi.AbstractSelectableChannel;
 
 public class SockEvent {
   public SockEvent(Mailbox<SockEvent> aReplyTo, AbstractSelectableChannel ach, int ops) {

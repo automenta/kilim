@@ -6,19 +6,15 @@
 
 package kilim.examples;
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.channels.FileChannel;
-import java.util.HashMap;
-
 import kilim.Pausable;
 import kilim.http.HttpRequest;
 import kilim.http.HttpResponse;
 import kilim.http.HttpServer;
 import kilim.http.HttpSession;
+
+import java.io.*;
+import java.nio.channels.FileChannel;
+import java.util.HashMap;
 
 /**
  * A simple file server over http
@@ -59,7 +55,7 @@ public class HttpFileServer extends HttpSession {
     }
 
     @Override
-    public void execute() throws Pausable, Exception {
+    public void execute() throws Pausable {
         try {
             // We will reuse the req and resp objects
             HttpRequest req = new HttpRequest();
@@ -194,10 +190,10 @@ public class HttpFileServer extends HttpSession {
             throw new SecurityException();
         }
         path =  path.substring(baseDirectoryName.length()); // include the "/"
-        return (path.length() == 0) ? "." : path;
+        return (path.isEmpty()) ? "." : path;
     }
 
-    public static HashMap<String, String> mimeTypes = new HashMap<String, String>();
+    public static HashMap<String, String> mimeTypes = new HashMap<>();
     
     static {
         mimeTypes.put("html", "text/html");

@@ -6,10 +6,10 @@
 
 package kilim;
 
+import kilim.concurrent.VolatileReferenceCell;
+
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import kilim.concurrent.VolatileReferenceCell;
 
 /**
  * A cell is a single-space buffer that supports multiple producers and a single
@@ -18,7 +18,7 @@ import kilim.concurrent.VolatileReferenceCell;
  */
 
 public class Cell<T> implements PauseReason, EventPublisher {
-    Queue<EventSubscriber>                 srcs             = new ConcurrentLinkedQueue<EventSubscriber>();
+    Queue<EventSubscriber>                 srcs             = new ConcurrentLinkedQueue<>();
     public static final int                SPACE_AVAILABLE  = 1;
     public static final int                MSG_AVAILABLE    = 2;
     public static final int                TIMED_OUT        = 3;
@@ -27,8 +27,8 @@ public class Cell<T> implements PauseReason, EventPublisher {
     public static final Event              timedOut         = new Event(TIMED_OUT);
     // private static final String defaultName_ = "DEFAULT-CELL";
 
-    VolatileReferenceCell<EventSubscriber> sink             = new VolatileReferenceCell<EventSubscriber>();
-    VolatileReferenceCell<T>               message          = new VolatileReferenceCell<T>();
+    VolatileReferenceCell<EventSubscriber> sink             = new VolatileReferenceCell<>();
+    VolatileReferenceCell<T>               message          = new VolatileReferenceCell<>();
 
     // DEBUG stuff
     // To do: move into monitorable stat object
@@ -49,14 +49,13 @@ public class Cell<T> implements PauseReason, EventPublisher {
      * @return buffered message if there's one, or null
      */
     public T get(EventSubscriber eo) {
+        T ret = message.get();
         EventSubscriber producer = null;
-        T ret;
-        ret = message.get();
         if (ret == null) {
             addMsgAvailableListener(eo);
         } else {
             message.compareAndSet(ret, null);
-            if (srcs.size() > 0) {
+            if (!srcs.isEmpty()) {
                 producer = srcs.poll();
             }
         }
@@ -75,11 +74,11 @@ public class Cell<T> implements PauseReason, EventPublisher {
      * @return buffered message if there's one, or null
      */
     public boolean put(T amsg, EventSubscriber eo) {
-        boolean ret = true; // assume we'll be able to enqueue
-        EventSubscriber subscriber;
         if (amsg == null)
             throw new NullPointerException("Null message supplied to put");
 
+        EventSubscriber subscriber;
+        boolean ret = true; // assume we'll be able to enqueue
         if (message.compareAndSet(null, amsg)) {
             subscriber = sink.get();
             // sink.set(null);
@@ -214,9 +213,9 @@ public class Cell<T> implements PauseReason, EventPublisher {
 
         public void blockingWait(final long timeoutMillis) {
             long start = System.currentTimeMillis();
-            long remaining = timeoutMillis;
-            boolean infiniteWait = timeoutMillis == 0;
             synchronized (Cell.this) {
+                boolean infiniteWait = timeoutMillis == 0;
+                long remaining = timeoutMillis;
                 while (!eventRcvd && (infiniteWait || remaining > 0)) {
                     try {
                         Cell.this.wait(infiniteWait ? 0 : remaining);
@@ -282,7 +281,7 @@ public class Cell<T> implements PauseReason, EventPublisher {
     }
 
     public String toString() {
-        return "id:" + System.identityHashCode(this) + " " + message;
+        return "id:" + System.identityHashCode(this) + ' ' + message;
     }
 
     // Implementation of PauseReason

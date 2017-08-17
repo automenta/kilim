@@ -5,15 +5,15 @@
  */
 package kilim.mirrors;
 
-import static kilim.Constants.D_OBJECT;
-
-import java.util.ArrayList;
-
 import kilim.NotPausable;
 import kilim.Pausable;
 import kilim.analysis.AsmDetector;
 import kilim.mirrors.CachedClassMirrors.ClassMirror;
 import kilim.mirrors.CachedClassMirrors.MethodMirror;
+
+import java.util.ArrayList;
+
+import static kilim.Constants.D_OBJECT;
 
 /**
  * Utility class to check if a method has been marked pausable
@@ -60,7 +60,6 @@ public class Detector {
 
     
     public int getPausableStatus(String className, String methodName, String desc) {
-        int ret = METHOD_NOT_FOUND_OR_PAUSABLE;
         // array methods (essentially methods deferred to Object (clone, wait etc)
         // and constructor methods are not pausable
         if (isNonPausableClass(className) || isNonPausableMethod(methodName)) {
@@ -87,6 +86,7 @@ public class Detector {
         } catch (VerifyError ve) {
             return AsmDetector.getPausableStatus(className, methodName, desc, this);
         }
+        int ret = METHOD_NOT_FOUND_OR_PAUSABLE;
         return ret;
     }
 
@@ -121,7 +121,7 @@ public class Detector {
                 // when comparing descriptors only compare arguments, not return types
                 String omDesc= om.getMethodDescriptor();
             
-                if (omDesc.substring(0,omDesc.indexOf(")")).equals(desc.substring(0,desc.indexOf(")")))) {
+                if (omDesc.substring(0,omDesc.indexOf(')')).equals(desc.substring(0,desc.indexOf(')')))) {
                     if (om.isBridge())  continue;
                     return om;
                 }
@@ -201,12 +201,12 @@ public class Detector {
         return sca.get(lasta + 1).replace('.', '/');
     }
 
-    final private static ArrayList<String> EMPTY_STRINGS = new ArrayList<String>(0);
+    final private static ArrayList<String> EMPTY_STRINGS = new ArrayList<>(0);
     public ArrayList<String> getSuperClasses(String name) throws ClassMirrorNotFoundException {
         if (name == null) {
             return EMPTY_STRINGS;
         }
-        ArrayList<String> ret = new ArrayList<String>(3);
+        ArrayList<String> ret = new ArrayList<>(3);
         while (name != null) {
             ret.add(name);
             ClassMirror c = classForName(name);
@@ -217,7 +217,7 @@ public class Detector {
     }
 
     private static String toDesc(String name) {
-        return (name.equals(JAVA_LANG_OBJECT)) ? D_OBJECT : "L" + name.replace('.', '/') + ';';
+        return (name.equals(JAVA_LANG_OBJECT)) ? D_OBJECT : 'L' + name.replace('.', '/') + ';';
     }
 
     private static String toClassName(String s) {

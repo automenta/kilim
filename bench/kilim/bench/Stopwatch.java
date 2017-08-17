@@ -43,7 +43,7 @@ public class Stopwatch {
     }
     
     public String toString() {
-        return name + ": elapsed: " + (lastElapsedMillis * multiplier) + " " + unit;
+        return name + ": elapsed: " + (lastElapsedMillis * multiplier) + ' ' + unit;
     }
     
     public String toString(int iters) {

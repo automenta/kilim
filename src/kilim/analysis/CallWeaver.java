@@ -4,95 +4,22 @@
  * specified in the file "License"
  */
 package kilim.analysis;
-import static kilim.Constants.ACC_ABSTRACT;
-import static kilim.Constants.D_FIBER_LAST_ARG;
-import static kilim.Constants.ALOAD_0;
-import static kilim.Constants.ASTORE_0;
-import static kilim.Constants.DLOAD_0;
-import static kilim.Constants.DSTORE_0;
-import static kilim.Constants.D_BOOLEAN;
-import static kilim.Constants.D_BYTE;
-import static kilim.Constants.D_CHAR;
-import static kilim.Constants.D_DOUBLE;
-import static kilim.Constants.D_FIBER;
-import static kilim.Constants.D_FLOAT;
-import static kilim.Constants.D_INT;
-import static kilim.Constants.D_LONG;
-import static kilim.Constants.D_NULL;
-import static kilim.Constants.D_OBJECT;
-import static kilim.Constants.D_SHORT;
-import static kilim.Constants.D_STATE;
-import static kilim.Constants.D_VOID;
-import static kilim.Constants.D_UNDEFINED;
-import static kilim.Constants.FIBER_CLASS;
-import static kilim.Constants.FLOAD_0;
-import static kilim.Constants.FSTORE_0;
-import static kilim.Constants.ILOAD_0;
-import static kilim.Constants.ISTORE_0;
-import static kilim.Constants.LLOAD_0;
-import static kilim.Constants.LSTORE_0;
-import static kilim.Constants.STATE_CLASS;
-import static kilim.analysis.VMType.TOBJECT;
-import static kilim.analysis.VMType.loadVar;
-import static kilim.analysis.VMType.storeVar;
-import static kilim.analysis.VMType.toVmType;
-import static org.objectweb.asm.Opcodes.ACONST_NULL;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ARETURN;
-import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.BIPUSH;
-import static org.objectweb.asm.Opcodes.CHECKCAST;
-import static org.objectweb.asm.Opcodes.DCONST_0;
-import static org.objectweb.asm.Opcodes.DCONST_1;
-import static org.objectweb.asm.Opcodes.DLOAD;
-import static org.objectweb.asm.Opcodes.DRETURN;
-import static org.objectweb.asm.Opcodes.DSTORE;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.FCONST_0;
-import static org.objectweb.asm.Opcodes.FCONST_1;
-import static org.objectweb.asm.Opcodes.FCONST_2;
-import static org.objectweb.asm.Opcodes.FLOAD;
-import static org.objectweb.asm.Opcodes.FRETURN;
-import static org.objectweb.asm.Opcodes.FSTORE;
-import static org.objectweb.asm.Opcodes.GETFIELD;
-import static org.objectweb.asm.Opcodes.GOTO;
-import static org.objectweb.asm.Opcodes.I2B;
-import static org.objectweb.asm.Opcodes.I2C;
-import static org.objectweb.asm.Opcodes.I2S;
-import static org.objectweb.asm.Opcodes.ICONST_0;
-import static org.objectweb.asm.Opcodes.ICONST_M1;
-import static org.objectweb.asm.Opcodes.ILOAD;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
-import static org.objectweb.asm.Opcodes.IRETURN;
-import static org.objectweb.asm.Opcodes.ISTORE;
-import static org.objectweb.asm.Opcodes.LCONST_0;
-import static org.objectweb.asm.Opcodes.LCONST_1;
-import static org.objectweb.asm.Opcodes.LLOAD;
-import static org.objectweb.asm.Opcodes.LRETURN;
-import static org.objectweb.asm.Opcodes.LSTORE;
-import static org.objectweb.asm.Opcodes.NEW;
-import static org.objectweb.asm.Opcodes.POP;
-import static org.objectweb.asm.Opcodes.POP2;
-import static org.objectweb.asm.Opcodes.PUTFIELD;
-import static org.objectweb.asm.Opcodes.RETURN;
-import static org.objectweb.asm.Opcodes.SIPUSH;
-
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
 
 import kilim.mirrors.CachedClassMirrors.ClassMirror;
 import kilim.mirrors.CachedClassMirrors.MethodMirror;
 import kilim.mirrors.ClassMirrorNotFoundException;
 import kilim.mirrors.Detector;
-
-import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.TableSwitchInsnNode;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.TableSwitchInsnNode;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+
+import static kilim.Constants.*;
+import static kilim.analysis.VMType.*;
 
 /**
  * This class produces all the code associated with a specific pausable method
@@ -403,7 +330,7 @@ public class CallWeaver {
             mi = new MethodInsnNode(INVOKESTATIC, cw.getName(), sw.getShimMethodName(), 
                     sw.getShimDesc(), cw.isInterface());
         }
-        if (mi.desc.indexOf(D_FIBER_LAST_ARG) == -1) {
+        if (!mi.desc.contains(D_FIBER_LAST_ARG)) {
             // Don't add another fiberarg if it already has one. It'll already
             // have one if we have copied jsr instructions and modified the 
             // same instruction node earlier. 
@@ -425,7 +352,7 @@ public class CallWeaver {
             if (cm.version() < 52)
                 return false;
             for (MethodMirror m: cm.getDeclaredMethods()) {
-                if (m.getMethodDescriptor().indexOf(D_FIBER_LAST_ARG) == -1) {
+                if (!m.getMethodDescriptor().contains(D_FIBER_LAST_ARG)) {
                     if ((m.getModifiers() & ACC_ABSTRACT) > 0) {
                         count++;
                         if (m.getName().equals(mi.name) && m.getMethodDescriptor().equals(mi.desc)) {
@@ -476,7 +403,7 @@ public class CallWeaver {
         LabelNode restoreLabel = new LabelNode();
         LabelNode saveLabel = new LabelNode();
         LabelNode unwindLabel = new LabelNode();
-        LabelNode[] labels = new LabelNode[] { resumeLabel, restoreLabel, saveLabel,
+        LabelNode[] labels = { resumeLabel, restoreLabel, saveLabel,
                 unwindLabel };
         new TableSwitchInsnNode(0, 3, resumeLabel, labels).accept(mv);
         genSave(mv, saveLabel);
@@ -621,7 +548,7 @@ public class CallWeaver {
         // Fiber.setState(state);
         loadVar(mv, TOBJECT, methodWeaver.getFiberVar());
         loadVar(mv, TOBJECT, stateVar);
-        mv.visitMethodInsn(INVOKEVIRTUAL, FIBER_CLASS, "setState", "(" + D_STATE + ")V", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, FIBER_CLASS, "setState", '(' + D_STATE + ")V", false);
         releaseVar(stateVar, 1);
         // Figure out the return type of the calling method and issue the
         // appropriate xRETURN instruction
@@ -688,7 +615,7 @@ public class CallWeaver {
         }
         // Restore variables from state
         int stateVar = -1;
-        if (valInfoList.size() > 0) {
+        if (!valInfoList.isEmpty()) {
             stateVar = allocVar(1);
         }
         genRestoreVars(mv, stateVar);
@@ -732,7 +659,7 @@ public class CallWeaver {
     void genRestoreEx(MethodVisitor mv, LabelNode restoreLabel) {
         restoreLabel.accept(mv);
         int stateVar = -1;
-        if (valInfoList.size() > 0) {
+        if (!valInfoList.isEmpty()) {
             stateVar = allocVar(1);
         }
         genRestoreVars(mv, stateVar);
@@ -744,7 +671,7 @@ public class CallWeaver {
     private void genRestoreVars(MethodVisitor mv, int stateVar) {
         Frame f = bb.startFrame;
 
-        if (valInfoList.size() > 0) {
+        if (!valInfoList.isEmpty()) {
             // need to have state in a local variable
             loadVar(mv, TOBJECT, methodWeaver.getFiberVar());
             mv.visitFieldInsn(GETFIELD, FIBER_CLASS, "curState", D_STATE);
@@ -797,7 +724,7 @@ public class CallWeaver {
      * @param mv
      * @param v
      */
-    private void checkcast(MethodVisitor mv, Value v) {
+    private static void checkcast(MethodVisitor mv, Value v) {
         String valType = v.getTypeDesc();
         int vmt = VMType.toVmType(valType);
         switch (vmt) {
@@ -826,7 +753,7 @@ public class CallWeaver {
         }
     }
 
-    private void loadConstant(MethodVisitor mv, Value v) {
+    private static void loadConstant(MethodVisitor mv, Value v) {
         if (v.getTypeDesc() == D_NULL) {
             mv.visitInsn(ACONST_NULL);
             return;
@@ -845,7 +772,7 @@ public class CallWeaver {
                 return;
             }
         } else if (c instanceof Float) {
-            Float f = ((Float) c).floatValue();
+            Float f = (Float) c;
             int insn = 0;
             if (f == 0.0)
                 insn = FCONST_0;
@@ -858,7 +785,7 @@ public class CallWeaver {
                 return;
             }
         } else if (c instanceof Long) {
-            Long l = ((Long) c).longValue();
+            Long l = (Long) c;
             int insn = 0;
             if (l == 0L)
                 insn = LCONST_0;
@@ -869,7 +796,7 @@ public class CallWeaver {
                 return;
             }
         } else if (c instanceof Double) {
-            Double d = ((Double) c).doubleValue();
+            Double d = (Double) c;
             int insn = 0;
             if (d == 0.0)
                 insn = DCONST_0;
@@ -885,7 +812,7 @@ public class CallWeaver {
     }
 
     private String createStateClass() {
-        return valInfoList.size() == 0 ? STATE_CLASS :  
+        return valInfoList.isEmpty() ? STATE_CLASS :
             methodWeaver.createStateClass(valInfoList);
     }
 
@@ -964,11 +891,7 @@ class ValInfo implements Comparable<ValInfo> {
             return -1;
         if (this.vmt > that.vmt)
             return 1;
-        if (this.var < that.var)
-            return -1;
-        if (this.var > that.var)
-            return 1;
-        return 0;
+        return Integer.compare(this.var, that.var);
     }
 }
 

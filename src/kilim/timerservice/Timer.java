@@ -21,8 +21,7 @@ public class Timer implements Comparable<Timer> {
 
 	@Override
 	public int compareTo(Timer o) {
-		return (int) (((Long) nextExecutionTime))
-				.compareTo((Long) o.nextExecutionTime);
+		return Long.compare(nextExecutionTime,o.nextExecutionTime);
 	}
 
         // -2: deferred (timer has completed)

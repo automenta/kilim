@@ -15,7 +15,7 @@ import kilim.Task;
 public class Jetlang extends Task {
     
     /* limit number  of msgs in mailbox */
-    static Mailbox<Integer> mb = new Mailbox<Integer>(1000,1000);
+    static Mailbox<Integer> mb = new Mailbox<>(1000, 1000);
     final static int max = 5000000;
     
     public static void main(String args[]) throws Exception {

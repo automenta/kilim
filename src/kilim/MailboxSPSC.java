@@ -7,7 +7,6 @@
 package kilim;
 
 import kilim.concurrent.SPSCQueue;
-import kilim.concurrent.VolatileLongCell;
 import kilim.concurrent.VolatileReferenceCell;
 
 /**
@@ -26,9 +25,9 @@ public class MailboxSPSC<T> extends SPSCQueue<T> implements PauseReason,
 		EventPublisher {
 	// TODO. Give mbox a config name and id and make monitorable
 
-	final VolatileReferenceCell<EventSubscriber> sink = new VolatileReferenceCell<EventSubscriber>(
+	final VolatileReferenceCell<EventSubscriber> sink = new VolatileReferenceCell<>(
 			null);
-	final VolatileReferenceCell<EventSubscriber> srcs = new VolatileReferenceCell<EventSubscriber>(
+	final VolatileReferenceCell<EventSubscriber> srcs = new VolatileReferenceCell<>(
 			null);
 
 	// FIX: I don't like this event design. The only good thing is that
@@ -72,8 +71,7 @@ public class MailboxSPSC<T> extends SPSCQueue<T> implements PauseReason,
 			addMsgAvailableListener(eo);
 			return false;
 		}
-		EventSubscriber producer = null;
-		producer = srcs.getAndSet(null);
+		EventSubscriber producer = srcs.getAndSet(null);
 		if (producer != null) {
 			producer.onEvent(this, spaceAvailble);
 		}
@@ -105,7 +103,6 @@ public class MailboxSPSC<T> extends SPSCQueue<T> implements PauseReason,
 	 * @return buffered message if there's one, or null
 	 */
 	public T get(EventSubscriber eo) {
-		EventSubscriber producer = null;
 		T e = poll();
 		if (e == null) {
 			if (eo != null) {
@@ -113,7 +110,7 @@ public class MailboxSPSC<T> extends SPSCQueue<T> implements PauseReason,
 			}
 		}
 
-		producer = srcs.getAndSet(null);
+		EventSubscriber producer = srcs.getAndSet(null);
 		if (producer != null) {
 			producer.onEvent(this, spaceAvailble);
 		}
@@ -175,14 +172,13 @@ public class MailboxSPSC<T> extends SPSCQueue<T> implements PauseReason,
 		if (msg == null) {
 			throw new NullPointerException("Null is not a valid element");
 		}
-		EventSubscriber subscriber;
 		boolean b = offer(msg);
 		if (!b) {
 			if (eo != null) {
 				srcs.set(eo);
 			}
 		}
-		subscriber = sink.getAndSet(null);
+		EventSubscriber subscriber = sink.getAndSet(null);
 		if (subscriber != null) {
 			subscriber.onEvent(this, messageAvailable);
 		}
@@ -466,9 +462,9 @@ public class MailboxSPSC<T> extends SPSCQueue<T> implements PauseReason,
 
 		public void blockingWait(final long timeoutMillis) {
 			long start = System.currentTimeMillis();
-			long remaining = timeoutMillis;
-			boolean infiniteWait = timeoutMillis == 0;
 			synchronized (MailboxSPSC.this) {
+				boolean infiniteWait = timeoutMillis == 0;
+				long remaining = timeoutMillis;
 				while (!eventRcvd && (infiniteWait || remaining > 0)) {
 					try {
 						MailboxSPSC.this.wait(infiniteWait ? 0 : remaining);
@@ -499,7 +495,7 @@ public class MailboxSPSC<T> extends SPSCQueue<T> implements PauseReason,
 	 */
 
 	public synchronized String toString() {
-		return "id:" + System.identityHashCode(this) + " " +
+		return "id:" + System.identityHashCode(this) + ' ' +
 		// DEBUG "nGet:" + nGet + " " +
 		// "nPut:" + nPut + " " +
 		// "numWastedPuts:" + nWastedPuts + " " +

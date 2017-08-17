@@ -6,7 +6,10 @@
 
 package kilim.bench;
 
-import kilim.*;
+import kilim.ExitMsg;
+import kilim.Mailbox;
+import kilim.Pausable;
+import kilim.Task;
 
 // Usage: java kilim.bench.LotsOfTasks -ntasks  
 //                 creates ntasks and waits for them to finish
@@ -16,9 +19,9 @@ import kilim.*;
 public class LotsOfTasks {
     static boolean block;
     static int nTasks = 100000;
-    static int nRounds = 10;
+    static int nRounds = 1000;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws InterruptedException {
         try {
             for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
@@ -36,11 +39,11 @@ public class LotsOfTasks {
         }
         System.out.println("kilim.bench.LotsOfTasks -nTasks " + nTasks + (block ? " -block": "") + " -nRounds " + nRounds);
 
-        final Stopwatch s = new Stopwatch("Tasks(" + nTasks + ")");
+        final Stopwatch s = new Stopwatch("Tasks(" + nTasks + ')');
         for (int round = 1; round <= nRounds; round++) {
             System.out.println("Round #" + round + " ================= ");
             s.tick();
-            final Mailbox<ExitMsg> exitmb = new Mailbox<ExitMsg>();
+            final Mailbox<ExitMsg> exitmb = new Mailbox<>();
 
             System.out.println("Creating " + nTasks + (block ? " blocking tasks" : " tasks"));
             for (int i = 1; i <= nTasks; i++) {
@@ -60,7 +63,6 @@ public class LotsOfTasks {
                         System.out.println("  " + i + " tasks finished.... (contd.)");
                     }
                 }
-                ;
             }
             System.out.println("Round #" + round + " done:");
             System.out.print("  ");
@@ -77,7 +79,7 @@ public class LotsOfTasks {
 }
 
 class LTask extends Task {
-    Mailbox<String> mymb = new Mailbox<String>();
+    Mailbox<String> mymb = new Mailbox<>();
 
     public void execute() throws Pausable {
         if (LotsOfTasks.block) {

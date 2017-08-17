@@ -25,13 +25,11 @@ public class RingQueue<T> {
     }
 
     public T peek() {
-        T elem;
-        T[] elems;
         int n = size;
         if (n > 0) {
-            elems = elements;
+            T[] elems = elements;
             int ic = icons;
-            elem = elems[ic];
+            T elem = elems[ic];
             return elem;
         }
         
@@ -40,10 +38,9 @@ public class RingQueue<T> {
     
     public T get() {
         T elem;
-        T[] elems;
         int n = size;
         if (n > 0) {
-            elems = elements;
+            T[] elems = elements;
             int ic = icons;
             elem = elems[ic];
             elems[ic] = null;
@@ -57,13 +54,13 @@ public class RingQueue<T> {
 
     @SuppressWarnings("unchecked")
     public boolean put(T elem) {
-        boolean ret = true;
         if (elem == null) {
             throw new NullPointerException("Null message supplied to put");
         }
         int ip = iprod;
         int ic = icons;
         int n = size;
+        boolean ret = true;
         if (n == elements.length) {
             assert ic == ip : "numElements == elements.length && ic != ip";
             if (n < maxSize) {

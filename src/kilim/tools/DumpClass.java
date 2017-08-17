@@ -5,11 +5,9 @@
  */
 
 package kilim.tools;
-import static kilim.analysis.Utils.dedent;
-import static kilim.analysis.Utils.indent;
-import static kilim.analysis.Utils.p;
-import static kilim.analysis.Utils.pn;
-import static kilim.analysis.Utils.resetIndentation;
+
+import kilim.analysis.TypeDesc;
+import org.objectweb.asm.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,24 +20,14 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import kilim.analysis.TypeDesc;
-
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import static kilim.analysis.Utils.*;
 
 /**
  * Equivalent to javap -c -l -private, but the output is in jasmin's format 
  * meant to be parseable by Asm.
  * @author sriram
  */
-public class DumpClass extends ClassVisitor implements Opcodes {
+public class DumpClass extends ClassVisitor {
     
     static boolean lineNumbers = true;
     
@@ -50,7 +38,7 @@ public class DumpClass extends ClassVisitor implements Opcodes {
             try {
                 Enumeration<JarEntry> e = new JarFile(name).entries();
                 while (e.hasMoreElements()) {
-                    ZipEntry en = (ZipEntry) e.nextElement();
+                    ZipEntry en = e.nextElement();
                     String n = en.getName();
                     if (!n.endsWith(".class")) continue;
                     n = n.substring(0, n.length() - 6).replace('/','.');
@@ -66,13 +54,13 @@ public class DumpClass extends ClassVisitor implements Opcodes {
     
 
     public DumpClass(InputStream is) throws IOException {
-        super(ASM5);
+        super(Opcodes.ASM5);
         ClassReader cr = new ClassReader(is);
         cr.accept(this, /*flags*/ 0);
     }
 
-    public DumpClass(String className) throws IOException {
-        super(ASM5);
+    public DumpClass(String className) throws IOException, java.io.FileNotFoundException {
+        super(Opcodes.ASM5);
         ClassReader cr;
         if (className.endsWith(".class")) {
             FileInputStream fis = new FileInputStream(className);
@@ -121,7 +109,7 @@ public class DumpClass extends ClassVisitor implements Opcodes {
         if (value != null) {
             p(" = ");
             if (value instanceof String) {
-                pn("\"" + value + "\"");
+                pn("\"" + value + '"');
             } else {
                 pn(value.toString());
             }
@@ -186,7 +174,7 @@ class DummyAnnotationVisitor extends AnnotationVisitor {
     }
 }
 
-class DumpMethodVisitor extends MethodVisitor implements Opcodes {
+class DumpMethodVisitor extends MethodVisitor {
 
     public DumpMethodVisitor() {
         super(Opcodes.ASM5);
@@ -236,7 +224,7 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
     }
 
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-        ppn(os[opcode] + " " + owner + "/" + name + " " + desc);
+        ppn(os[opcode] + ' ' + owner + '/' + name + ' ' + desc);
     }
 
     public void visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
@@ -245,22 +233,22 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
         p (";  Locals - ");
         for(int i = 0; i < nLocal; i++) {
             Object o = local[i];
-            System.out.print("#" + i + "."  + type(o) + "  ");
+            System.out.print("#" + i + '.' + type(o) + "  ");
         }
         System.out.println();
         p(";  Stack - ");
         for(int i = 0; i < nStack; i++) {
             Object o = stack[i];
-            System.out.print("#" + i + "."  + type(o) + "  ");
+            System.out.print("#" + i + '.' + type(o) + "  ");
         }
         System.out.println("");
     }
 
-    private String type(Object o) {
+    private static String type(Object o) {
         if (o == null) {
             return "null";
         } else if (o instanceof Integer) {
-            switch (((Integer)o).intValue()) {
+            switch ((Integer) o) {
             case 0: return "Top";
             case 1: return "Integer";
             case 2: return "Float";
@@ -271,11 +259,11 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
         } else if (o instanceof String) {
             return (String)o;
         }
-        return "??UNKNOWN??" + o.getClass() + ":" + o;
+        return "??UNKNOWN??" + o.getClass() + ':' + o;
     }
 
     public void visitIincInsn(int var, int increment) {
-        ppn("iinc " + var + " " + increment);
+        ppn("iinc " + var + ' ' + increment);
     }
 
     public void visitInsn(int opcode) {
@@ -283,37 +271,37 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
     }
 
     public void visitIntInsn(int opcode, int operand) {
-        if (opcode == NEWARRAY) {
+        if (opcode == Opcodes.NEWARRAY) {
             String t = "UNDEFINED";
             switch (operand) {
-                case T_BOOLEAN: t = " boolean"; break;
-                case T_CHAR:    t = " char"; break;
-                case T_FLOAT:   t = " float"; break;
-                case T_DOUBLE:  t = " double"; break;
-                case T_BYTE:    t = " byte"; break;
-                case T_SHORT:   t = " short"; break;
-                case T_INT:     t = " int"; break;
-                case T_LONG:    t = " long"; break;
+                case Opcodes.T_BOOLEAN: t = " boolean"; break;
+                case Opcodes.T_CHAR:    t = " char"; break;
+                case Opcodes.T_FLOAT:   t = " float"; break;
+                case Opcodes.T_DOUBLE:  t = " double"; break;
+                case Opcodes.T_BYTE:    t = " byte"; break;
+                case Opcodes.T_SHORT:   t = " short"; break;
+                case Opcodes.T_INT:     t = " int"; break;
+                case Opcodes.T_LONG:    t = " long"; break;
             }
             ppn(os[opcode] + t);
         } else {
-            ppn(os[opcode] + " " +operand);
+            ppn(os[opcode] + ' ' +operand);
         }
     }
 
     public void visitJumpInsn(int opcode, Label label) {
-        ppn(os[opcode] + " " + lab(label));
+        ppn(os[opcode] + ' ' + lab(label));
     }
 
     public void visitLabel(Label label) {
         dedent(2);
-        pn(lab(label) + ":");
+        pn(lab(label) + ':');
         indent(2);
     }
 
     public void visitLdcInsn(Object cst) {
         String op = (cst instanceof Double) || (cst instanceof Long) ? "ldc2_w " : "ldc ";
-        String type = (cst instanceof String) ? "\"" + esc((String)cst) + "\"" : cst.toString();
+        String type = (cst instanceof String) ? '"' + esc((String)cst) + '"' : cst.toString();
         ppn(op  + type);
     }
 
@@ -322,7 +310,7 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
     }
 
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-        pn(".var " + index + " is "+  name + " " + desc + " from " + lab(start) + " to " + lab(end));
+        pn(".var " + index + " is "+  name + ' ' + desc + " from " + lab(start) + " to " + lab(end));
     }
 
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
@@ -336,8 +324,8 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
     }
 
     public void visitMethodInsn(int opcode, String owner, String name, String desc,boolean itf) {
-        String str = os[opcode] + " " + owner + "/" + name + desc;
-        if (opcode == INVOKEINTERFACE) {
+        String str = os[opcode] + ' ' + owner + '/' + name + desc;
+        if (opcode == Opcodes.INVOKEINTERFACE) {
             ppn(str + ", " + (TypeDesc.getNumArgumentTypes(desc)+1));
         } else {
             ppn(str);
@@ -348,7 +336,7 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
             Object... bsmArgs) {
         ppn("invokedynamic " + name + desc);
         indent(4);
-        pn("; bootstrap = " + bsm.getOwner() + "." + bsm.getName() + bsm.getDesc());
+        pn("; bootstrap = " + bsm.getOwner() + '.' + bsm.getName() + bsm.getDesc());
         for (int i = 0; i < bsmArgs.length; i++) {
             pn("; arg[" + i + "] = " + bsmArgs[0]);
         }
@@ -356,7 +344,7 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
     }
 
     public void visitMultiANewArrayInsn(String desc, int dims) {
-        ppn("multinewarray " + desc + " " + dims) ;
+        ppn("multinewarray " + desc + ' ' + dims) ;
     }
 
     public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
@@ -375,21 +363,17 @@ class DumpMethodVisitor extends MethodVisitor implements Opcodes {
     }
 
     public void visitTypeInsn(int opcode, String desc) {
-        ppn(os[opcode] + " " +desc);
+        ppn(os[opcode] + ' ' +desc);
     }
 
     public void visitVarInsn(int opcode, int var) {
-        ppn(os[opcode] + " " + var);
+        ppn(os[opcode] + ' ' + var);
     }
     
-    HashMap<Label,String> labels = new HashMap<Label, String>();
+    HashMap<Label,String> labels = new HashMap<>();
     int labCount = 1;
     private String lab(Label label) {
-        String ret = labels.get(label);
-        if (ret == null) {
-            ret = "L"+ labCount++;
-            labels.put(label, ret);
-        }
+        String ret = labels.computeIfAbsent(label, k -> "L" + labCount++);
         return ret;
     }
     public AnnotationVisitor visitAnnotationDefault() {

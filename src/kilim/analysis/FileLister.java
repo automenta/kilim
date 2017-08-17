@@ -5,11 +5,8 @@
  */
 
 package kilim.analysis;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+
+import java.io.*;
 import java.lang.ref.WeakReference;
 import java.nio.file.Paths;
 import java.util.Enumeration;
@@ -35,15 +32,15 @@ public class FileLister implements Iterable<FileLister.Entry> {
          * @return true if the newer version exists
          */
         public boolean check(String outdir) { return false; }
-    };
-    
+    }
+
     /**
      * weak ref to a container to avoid hanging on to an open jar file. 
      */
     volatile WeakReference<FileContainer> containerRef;
     String name;
     
-    public FileLister(String dirOrJarName) throws IOException {
+    public FileLister(String dirOrJarName) {
         name= dirOrJarName;
     }
     
@@ -75,7 +72,7 @@ public class FileLister implements Iterable<FileLister.Entry> {
                 throw new IOException("Expected jar file or directory name");
             }
         }
-        containerRef = new WeakReference<FileContainer>(container);
+        containerRef = new WeakReference<>(container);
         return container;
     }
 
@@ -105,7 +102,7 @@ public class FileLister implements Iterable<FileLister.Entry> {
 }
 
 abstract class FileContainer implements Iterator<FileLister.Entry> {
-    abstract FileLister.Entry open(String relativeFileName) throws IOException;
+    abstract FileLister.Entry open(String relativeFileName);
 }
 
 /**
@@ -132,7 +129,7 @@ class DirIterator extends FileContainer {
         }
 
         @Override
-        public InputStream getInputStream() throws IOException {
+        public InputStream getInputStream() throws FileNotFoundException {
             return new BufferedInputStream(new FileInputStream(file));
         }
 
@@ -145,7 +142,7 @@ class DirIterator extends FileContainer {
         }
     }
     
-    Stack<File> stack = new Stack<File>();
+    Stack<File> stack = new Stack<>();
     
     
     DirIterator(File f) {
@@ -187,7 +184,7 @@ class DirIterator extends FileContainer {
     }
 
     @Override
-    FileLister.Entry open(String fileName) throws IOException {
+    FileLister.Entry open(String fileName) {
         File ret = new File(root.getAbsolutePath() + File.separatorChar + fileName);
         if (ret.exists() && ret.isFile()) {
             return new DirEntry(ret);
@@ -239,7 +236,7 @@ class JarIterator extends FileContainer {
     }
 
     @Override
-    FileLister.Entry open(String relativeFileName) throws IOException {
+    FileLister.Entry open(String relativeFileName) {
         JarEntry e = jarFile.getJarEntry(relativeFileName);
         return e == null ? null : new JEntry(e);
     }

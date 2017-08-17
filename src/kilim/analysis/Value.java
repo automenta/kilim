@@ -5,11 +5,13 @@
  */
 
 package kilim.analysis;
-import static kilim.Constants.D_UNDEFINED;
-import static kilim.Constants.D_NULL;
+
+import kilim.mirrors.Detector;
 
 import java.util.Arrays;
-import kilim.mirrors.Detector;
+
+import static kilim.Constants.D_NULL;
+import static kilim.Constants.D_UNDEFINED;
 
 /**
  * A SSA value that represents all objects produced at a particular 
@@ -104,7 +106,7 @@ public class Value {
     }
     
     
-    private int addTo(int[] newSites, int site) {
+    private static int addTo(int[] newSites, int site) {
         for (int i = 0; i < newSites.length; i++) {
             int s = newSites[i];
             if (s == -1) {
@@ -165,7 +167,7 @@ public class Value {
     @Override
     public String toString() {
         if (numSites == 0 && typeDesc == D_UNDEFINED) return "undef";
-        StringBuffer sb = new StringBuffer(40);
+        StringBuilder sb = new StringBuilder(40);
         sb.append(typeDesc).append('[');
         for (int i = 0; i < numSites; i++) {
             if (i > 0) sb.append(' ');
@@ -173,7 +175,7 @@ public class Value {
         }
         sb.append(']');
         if (constVal != NO_VAL) {
-            sb.append(" == ").append(constVal.toString());
+            sb.append(" == ").append(constVal);
         }
         return sb.toString();
     }

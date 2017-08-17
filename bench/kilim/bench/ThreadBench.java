@@ -19,12 +19,16 @@ public class ThreadBench extends Thread {
         try {
             for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
-                if (arg.equals("-k")) {
-                    k = Integer.parseInt(args[++i]);
-                } else if (arg.equals("-n")) {
-                    n = Integer.parseInt(args[++i]);
-                } else if (arg.equals("-t")) {
-                    tracing = true;
+                switch (arg) {
+                    case "-k":
+                        k = Integer.parseInt(args[++i]);
+                        break;
+                    case "-n":
+                        n = Integer.parseInt(args[++i]);
+                        break;
+                    case "-t":
+                        tracing = true;
+                        break;
                 }
             }
         } 
@@ -89,7 +93,7 @@ public class ThreadBench extends Thread {
             while (true) {
                 int v = read();
                 if (tracing) 
-                    System.out.println(this.toString() + " copying number " + v);
+                    System.out.println(this + " copying number " + v);
                 next.write(v);
                 if (v == 0) break; 
             }
@@ -100,10 +104,9 @@ public class ThreadBench extends Thread {
     static class Sink extends ThreadBench {
         ThreadBench source;
         public  void run() {
-            int v;
             int i = 0;
             while (true) {
-                v = read();
+                int v = read();
                 i++;
                 if(tracing) 
                     System.out.printf("sink: receiving number %d\n-----\n", v);

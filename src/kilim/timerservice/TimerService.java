@@ -2,19 +2,14 @@
 
 package kilim.timerservice;
 
+import kilim.*;
+import kilim.concurrent.MPSCQueue;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
-import kilim.AffineThreadPool;
-
-import kilim.Cell;
-import kilim.Event;
-import kilim.EventPublisher;
-import kilim.EventSubscriber;
-import kilim.Scheduler;
-import kilim.concurrent.MPSCQueue;
 
 public class TimerService {
     private final MPSCQueue<Timer> timerQueue;
@@ -30,7 +25,7 @@ public class TimerService {
 
     public TimerService() {
         timerHeap = new TimerPriorityHeap();
-        timerQueue = new MPSCQueue<Timer>(Integer.getInteger("kilim.maxpendingtimers",100000));
+        timerQueue = new MPSCQueue<>(Integer.getInteger("kilim.maxpendingtimers", 100000));
         timerProxy = Executors.newSingleThreadScheduledExecutor();
         lock = new java.util.concurrent.locks.ReentrantLock();
     }
@@ -90,7 +85,7 @@ public class TimerService {
 
         long clock = System.currentTimeMillis(), sched = 0;
         int retry = -1;
-        while ((retry < 0 || !timerQueue.isEmpty() || (sched > 0 && sched <= clock))
+        while ((retry < 0 || (sched > 0 && sched <= clock) || !timerQueue.isEmpty() )
                 && ++retry < maxtry
                 && lock.tryLock()) {
             try { 
@@ -115,13 +110,13 @@ public class TimerService {
     }
     
     private long doTrigger(long currentTime) {
-        Timer[] buf = new Timer[100];
         for (Timer t; (t = timerHeap.peek())!=null && t.getExecutionTime()==-1;) {
             t.onHeap = false;
             timerHeap.poll();
         }
-        int i = 0;
+        Timer[] buf = new Timer[100];
         timerQueue.fill(buf);
+        int i = 0;
         do {
             for (i = 0; i<buf.length; i++) {
                 Timer t = buf[i];

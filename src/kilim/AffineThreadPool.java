@@ -2,12 +2,11 @@
 
 package kilim;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import com.conversantmedia.util.concurrent.DisruptorBlockingQueue;
 import kilim.timerservice.TimerService;
+
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
     fixme:vestigial - release note for pre-2.0
@@ -24,15 +23,23 @@ import kilim.timerservice.TimerService;
     so any external usages will now be broken
 */
 public class AffineThreadPool {
-    Executor [] exes;
-    AtomicInteger index = new AtomicInteger(-1);
+
+    final Executor [] exes;
+
+    final AtomicInteger index = new AtomicInteger(-1);
+
     private AtomicInteger count = new AtomicInteger(0);
     
 
     public AffineThreadPool(int numThreads,int queueSize,TimerService ts) {
         exes = new Executor[numThreads];
-        for (int ii=0; ii < numThreads; ii++)
-            exes[ii] = new Executor(new LinkedBlockingQueue(queueSize),ts);
+        for (int ii=0; ii < numThreads; ii++) {
+            exes[ii] = new Executor(
+                    //new LinkedBlockingQueue(queueSize),
+                    //new ArrayBlockingQueue<Task>(queueSize),
+                    new DisruptorBlockingQueue(queueSize),
+                    ts);
+        }
         ts.defaultExec = exes[0];
     }
 
@@ -121,7 +128,8 @@ public class AffineThreadPool {
     }
 
     class Executor extends ThreadPoolExecutor {
-        LinkedBlockingQueue<Task> que;
+        //LinkedBlockingQueue<Task> que;
+        final BlockingQueue<Task> que;
         AtomicInteger pending = new AtomicInteger();
         private TimerService timerService;
         
@@ -130,9 +138,10 @@ public class AffineThreadPool {
         void publish(Task task) {
             pending.incrementAndGet();
             submit(task);
+            //execute(task);
         }
         
-        public Executor(LinkedBlockingQueue que,TimerService ts) {
+        public Executor(BlockingQueue que, TimerService ts) {
             super(1,1,Integer.MAX_VALUE,TimeUnit.DAYS,que);
             this.que = que;
             timerService = ts;

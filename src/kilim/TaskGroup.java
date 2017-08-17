@@ -8,9 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 
 public class TaskGroup extends Task {
-    private Mailbox<Task> addedTasksMB = new Mailbox<Task>();
-    private Mailbox<ExitMsg> exitmb = new Mailbox<ExitMsg>();
-    private HashSet<Task> tasks = new HashSet<Task>();
+    private Mailbox<Task> addedTasksMB = new Mailbox<>();
+    private Mailbox<ExitMsg> exitmb = new Mailbox<>();
+    private HashSet<Task> tasks = new HashSet<>();
     
     public List<ExitMsg> results = Collections.synchronizedList(new ArrayList<ExitMsg>());
 

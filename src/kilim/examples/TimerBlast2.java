@@ -6,11 +6,16 @@
 
 package kilim.examples;
 
-import java.util.Random;
 import kilim.Mailbox;
 import kilim.Pausable;
 import kilim.Scheduler;
 import kilim.Task;
+import kilim.bench.LotsOfTasks;
+import kilim.bench.PingPong;
+import kilim.bench.ThreadBench;
+import kilim.tools.Kilim;
+
+import java.util.Random;
 
 public class TimerBlast2 {
     int num;
@@ -105,7 +110,7 @@ public class TimerBlast2 {
 // Scheduler.defaultScheduler.affinePool_.queues_.get(0).add(new kilim.timerservice.TimerService.WatchdogTask())
     
     long prev = 0;
-    void loop(long val) throws Exception {
+    void loop(long val) throws InterruptedException {
         long start = System.currentTimeMillis();
         while (true) {
             Thread.sleep(10);
@@ -136,6 +141,12 @@ public class TimerBlast2 {
             new TimerBlast2().setup(num << ii);
         
         Scheduler.getDefaultScheduler().idledown();
+    }
+
+    public static class TimerBlast2Runner {
+        public static void main(String[] args) throws Exception {
+            Kilim.main(PingPong.class.getName());
+        }
     }
 
 }

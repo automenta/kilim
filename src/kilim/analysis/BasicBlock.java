@@ -4,55 +4,13 @@
  * specified in the file "License"
  */
 package kilim.analysis;
-import static kilim.Constants.D_ARRAY_BOOLEAN;
-import static kilim.Constants.D_ARRAY_BYTE;
-import static kilim.Constants.D_ARRAY_CHAR;
-import static kilim.Constants.D_ARRAY_DOUBLE;
-import static kilim.Constants.D_ARRAY_FLOAT;
-import static kilim.Constants.D_ARRAY_INT;
-import static kilim.Constants.D_ARRAY_LONG;
-import static kilim.Constants.D_ARRAY_SHORT;
-import static kilim.Constants.D_BOOLEAN;
-import static kilim.Constants.D_BYTE;
-import static kilim.Constants.D_CHAR;
-import static kilim.Constants.D_DOUBLE;
-import static kilim.Constants.D_FLOAT;
-import static kilim.Constants.D_INT;
-import static kilim.Constants.D_LONG;
-import static kilim.Constants.D_NULL;
-import static kilim.Constants.D_RETURN_ADDRESS;
-import static kilim.Constants.D_SHORT;
-import static kilim.Constants.D_VOID;
-import static kilim.Constants.TASK_CLASS;
-import static kilim.Constants.THROWABLE_CLASS;
-import static org.objectweb.asm.Opcodes.*;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
 
 import kilim.KilimException;
-import kilim.mirrors.Detector;
+import org.objectweb.asm.tree.*;
 
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.IincInsnNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.IntInsnNode;
-import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.JumpInsnNode;
-import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.LdcInsnNode;
-import org.objectweb.asm.tree.LookupSwitchInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MultiANewArrayInsnNode;
-import org.objectweb.asm.tree.TableSwitchInsnNode;
-import org.objectweb.asm.tree.TypeInsnNode;
-import org.objectweb.asm.tree.VarInsnNode;
+import java.util.*;
+
+import static kilim.Constants.*;
 
 /**
  * A basic block is a contiguous set of instructions that has one label at the
@@ -173,9 +131,9 @@ public class BasicBlock implements Comparable<BasicBlock> {
     /**
      * List of successors (follower and all branch targets). Should be null 
      */
-    public ArrayList<BasicBlock>  successors         = new ArrayList<BasicBlock>(3);
+    public ArrayList<BasicBlock>  successors         = new ArrayList<>(3);
 
-    public ArrayList<Handler>     handlers           = new ArrayList<Handler>(2);
+    public ArrayList<Handler>     handlers           = new ArrayList<>(2);
 
     int                           numPredecessors;
 
@@ -225,7 +183,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
         flow = aflow;
         startLabel = aStartLabel;
         usage = new Usage(aflow.maxLocals);
-        successors = new ArrayList<BasicBlock>(2);
+        successors = new ArrayList<>(2);
     }
 
     /**
@@ -242,22 +200,20 @@ public class BasicBlock implements Comparable<BasicBlock> {
      */
     @SuppressWarnings("unchecked")
     int initialize(int pos) {
-        AbstractInsnNode ain;
         startPos = pos;
         
         BasicBlock bb;
-        boolean endOfBB = false;
         boolean hasFollower = true;
         int nextCatch = flow.mapHandler(pos+1);
         int size = flow.instructions.size();
-        for (; pos < size; pos++) {
+        for (boolean endOfBB = false; pos < size; pos++) {
             if (pos > startPos && (pos==nextCatch || flow.getLabelAt(pos) != null)) {
                 pos--;
                 hasFollower = true;
                 endOfBB = true;
                 break;
             }
-            ain = getInstruction(pos);
+            AbstractInsnNode ain = getInstruction(pos);
             int opcode = ain.getOpcode();
             switch (opcode) {
                 case ALOAD:
@@ -483,7 +439,6 @@ public class BasicBlock implements Comparable<BasicBlock> {
      * and set the stage for SSA-style optimizations.
      */
     void interpret() {
-        Value v, v1, v2, v3, v4;
         Frame frame = startFrame.dup();
         if (isCatchHandler()) {
             // When an exception is thrown, the stack is cleared
@@ -496,16 +451,19 @@ public class BasicBlock implements Comparable<BasicBlock> {
             // own
             frame.push(Value.make(startPos, D_RETURN_ADDRESS));
         }
-        String componentType = null;
-        @SuppressWarnings("unused")
-        boolean canThrowException = false;
-        boolean propagateFrame = true;
         int i = 0;
         try {
+            boolean propagateFrame = true;
+            @SuppressWarnings("unused") boolean canThrowException = false;
+            String componentType = null;
             for (i = startPos; i <= endPos; i++) {
                 AbstractInsnNode ain = getInstruction(i);
                 int opcode = ain.getOpcode();
                 int val, var;
+                Value v3;
+                Value v2;
+                Value v1;
+                Value v;
                 switch (opcode) {
                     case -1: // linenumbernode, framenode, etc.
                         continue;
@@ -522,14 +480,14 @@ public class BasicBlock implements Comparable<BasicBlock> {
                     case ICONST_3:
                     case ICONST_4:
                     case ICONST_5:
-                        frame.push(Value.make(i, D_INT, new Integer(opcode
+                        frame.push(Value.make(i, D_INT, Integer.valueOf(opcode
                                 - ICONST_0)));
                         break;
                         
                         
                     case LCONST_0:
                     case LCONST_1:
-                        frame.push(Value.make(i, D_LONG, new Long(opcode - LCONST_0)));
+                        frame.push(Value.make(i, D_LONG, Long.valueOf(opcode - LCONST_0)));
                         break;
                         
                     case ILOAD:
@@ -545,25 +503,25 @@ public class BasicBlock implements Comparable<BasicBlock> {
                     case FCONST_0:
                     case FCONST_1:
                     case FCONST_2:
-                        frame.push(Value.make(i, D_FLOAT, new Float(opcode
+                        frame.push(Value.make(i, D_FLOAT, (float) (opcode
                                 - FCONST_0)));
                         break;
                         
                     case DCONST_0:
                     case DCONST_1:
-                        frame.push(Value.make(i, D_DOUBLE, new Double(opcode
+                        frame.push(Value.make(i, D_DOUBLE, (double) (opcode
                                 - DCONST_0)));
                         break;
                         
                         
                     case BIPUSH:
                         val = ((IntInsnNode) ain).operand;
-                        frame.push(Value.make(i, D_BYTE, new Integer(val)));
+                        frame.push(Value.make(i, D_BYTE, Integer.valueOf(val)));
                         break;
                         
                     case SIPUSH:
                         val = ((IntInsnNode) ain).operand;
-                        frame.push(Value.make(i, D_SHORT, new Integer(val)));
+                        frame.push(Value.make(i, D_SHORT, Integer.valueOf(val)));
                         break;
                         
                     case LDC:
@@ -715,7 +673,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
                             if (v2.isCategory1()) {
                                 v3 = frame.pop();
                                 if (v3.isCategory1()) {
-                                    v4 = frame.pop();
+                                    Value v4 = frame.pop();
                                     if (v4.isCategory1()) {
                                         // w4,w3,w2,w1 => w2,w1,w4,w3,w2,w1
                                         frame.push(v2);
@@ -962,7 +920,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
                         String desc = min.desc;
                         if (flow.isPausableMethodInsn(min) && frame.numMonitorsActive > 0) {
                             throw new KilimException("Error: Can not call pausable nethods from within a synchronized block\n" +
-                                    "Caller: " + this.flow.classFlow.name.replace('/', '.') + "." + this.flow.name + this.flow.desc +
+                                    "Caller: " + this.flow.classFlow.name.replace('/', '.') + '.' + this.flow.name + this.flow.desc +
                                     "\nCallee: " + ((MethodInsnNode)ain).name); 
                         }
                         canThrowException = true;
@@ -1033,7 +991,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
                         canThrowException = true;
                         frame.popWord();
                         componentType = TypeDesc.getInterned(((TypeInsnNode) ain).desc);
-                        v = Value.make(i, TypeDesc.getInterned("[" + componentType));
+                        v = Value.make(i, TypeDesc.getInterned('[' + componentType));
                         frame.push(v);
                         break;
                         
@@ -1079,7 +1037,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
                         int dims = minode.dims;
                         frame.popn(dims);
                         componentType = TypeDesc.getInterned(minode.desc);
-                        StringBuffer sb = new StringBuffer(componentType.length()
+                        StringBuilder sb = new StringBuilder(componentType.length()
                                 + dims);
                         for (int j = 0; j < dims; j++)
                             sb.append('[');
@@ -1104,7 +1062,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
                 canThrowException = false;
             }
         } catch (AssertionError ae) {
-            System.err.println("**** Assertion Error analyzing " + flow.classFlow.name + "." + flow.name);
+            System.err.println("**** Assertion Error analyzing " + flow.classFlow.name + '.' + flow.name);
             System.err.println("Basic block " + this);
             System.err.println("i = " + i);
             System.err.println("Frame: " + frame);
@@ -1141,9 +1099,8 @@ public class BasicBlock implements Comparable<BasicBlock> {
         if (startFrame == null) {
             startFrame = inframe.dup();
         } else {
-            Frame ret;
             // Absorb only those local vars dictacted by usage.in.
-            ret = startFrame.merge(flow.detector, inframe, localsOnly, usage);
+            Frame ret = startFrame.merge(flow.detector, inframe, localsOnly, usage);
             if (ret == startFrame) { // no change
                 enqueue = false;
             } else {
@@ -1171,7 +1128,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
     }
 
     public AbstractInsnNode getInstruction(int pos) {
-        return (AbstractInsnNode) flow.instructions.get(pos);
+        return flow.instructions.get(pos);
     }
 
     /** pretty print successor and catch BB ids */
@@ -1190,7 +1147,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
     public boolean flowVarUsage() {
 //        assert(succBlocks != null);
         if (succUsage == null) {
-            succUsage = new ArrayList<Usage>(successors.size() + handlers.size());
+            succUsage = new ArrayList<>(successors.size() + handlers.size());
             for (BasicBlock succ : successors) succUsage.add(succ.usage);
             for (Handler h : handlers)         succUsage.add(h.catchBB.usage);
         }
@@ -1219,8 +1176,6 @@ public class BasicBlock implements Comparable<BasicBlock> {
      * 
      */
     ArrayList<BasicBlock> inline() throws KilimException {
-        HashMap<BasicBlock, BasicBlock> bbCopyMap = null;
-        HashMap<LabelNode, LabelNode> labelCopyMap = null;
         BasicBlock targetBB = successors.get(0);
         LabelNode returnToLabel = flow.getOrCreateLabelAtPos(endPos+1);
         BasicBlock returnToBB = flow.getOrCreateBasicBlock(returnToLabel);
@@ -1234,14 +1189,14 @@ public class BasicBlock implements Comparable<BasicBlock> {
             // Tell the RET blocks about the returnTo address and we are done.
             for (BasicBlock b : targetBB.getSubBlocks()) {
                 if (b.lastInstruction() == RET) {
-                    assert b.successors.size() == 0 : this.toString();
+                    assert b.successors.isEmpty() : this.toString();
                     b.addSuccessor(returnToBB);
                 }
             }
             return null;
         }
-        bbCopyMap = new HashMap<BasicBlock, BasicBlock>(10);
-        labelCopyMap = new HashMap<LabelNode, LabelNode>(10);
+        HashMap<BasicBlock, BasicBlock> bbCopyMap = new HashMap<>(10);
+        HashMap<LabelNode, LabelNode> labelCopyMap = new HashMap<>(10);
         successors.clear();
         // first pass
         targetBB.dupBBAndLabels(isPausableSub, bbCopyMap, labelCopyMap, returnToBB);
@@ -1278,7 +1233,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
             HashMap<BasicBlock, BasicBlock> bbCopyMap,
             HashMap<LabelNode, LabelNode> labelCopyMap) throws KilimException {
 
-        ArrayList<BasicBlock> newBBs = new ArrayList<BasicBlock>(targetBB.getSubBlocks().size());
+        ArrayList<BasicBlock> newBBs = new ArrayList<>(targetBB.getSubBlocks().size());
         for (BasicBlock orig : targetBB.getSubBlocks()) {
             BasicBlock dup = bbCopyMap.get(orig);
             dup.flags = orig.flags;
@@ -1292,11 +1247,9 @@ public class BasicBlock implements Comparable<BasicBlock> {
             dup.handlers = orig.handlers;
             if (orig.follower != null) {
                 dup.follower = bbCopyMap.get(orig.follower);
-                if (dup.follower == null) {
-                    assert dup.lastInstruction() == RET;
-                }
+                assert dup.follower != null || dup.lastInstruction() == RET;
             }
-            dup.successors = new ArrayList<BasicBlock>(orig.successors.size());
+            dup.successors = new ArrayList<>(orig.successors.size());
             if (orig.lastInstruction() == RET) {
                 dup.addSuccessor(returnToBB);
             } else {
@@ -1317,12 +1270,11 @@ public class BasicBlock implements Comparable<BasicBlock> {
                 // Note: last instruction (@endPos) isn't copied in the loop.
                 // If it has labels, a new instruction is generated; either
                 // way the last instruction is appended separately.
-                int i;
                 int newPos = instructions.size();
                 int end = orig.endPos;
 
                 // create new labels and instructions
-                for (i = orig.startPos;  i <= end; i++, newPos++) {
+                for (int i = orig.startPos; i <= end; i++, newPos++) {
                     LabelNode l = flow.getLabelAt(i);
                     if (l != null) {
                         l = labelCopyMap.get(l);
@@ -1333,8 +1285,8 @@ public class BasicBlock implements Comparable<BasicBlock> {
                 }
                 
                 // new handlers
-                dup.handlers = new ArrayList<Handler>(orig.handlers.size());
-                if (orig.handlers.size() > 0) {
+                dup.handlers = new ArrayList<>(orig.handlers.size());
+                if (!orig.handlers.isEmpty()) {
                     for (Handler oh : orig.handlers) {
                         Handler h = new Handler(dup.startPos
                                 + (oh.from - orig.startPos), dup.endPos
@@ -1361,9 +1313,9 @@ public class BasicBlock implements Comparable<BasicBlock> {
         if (subBlocks == null) {
             if (!hasFlag(IS_SUBROUTINE))
                 return null;
-            subBlocks = new ArrayList<BasicBlock>(10);
-            Stack<BasicBlock> stack = new Stack<BasicBlock>();
+            subBlocks = new ArrayList<>(10);
             this.setFlag(SUB_BLOCK);
+            Stack<BasicBlock> stack = new Stack<>();
             stack.add(this);
             while (!stack.isEmpty()) {
                 BasicBlock b = stack.pop();
@@ -1405,16 +1357,16 @@ public class BasicBlock implements Comparable<BasicBlock> {
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer(200);
-        sb.append("\n========== BB #").append(id).append("[").append(System.identityHashCode(this)).append("]\n");
-        sb.append("method: ").append(this.flow.name).append(this.flow.desc).append("\n");
+        StringBuilder sb = new StringBuilder(200);
+        sb.append("\n========== BB #").append(id).append('[').append(System.identityHashCode(this)).append("]\n");
+        sb.append("method: ").append(this.flow.name).append(this.flow.desc).append('\n');
         sb.append("start = ").append(startPos).append(",end = ").append(endPos).append('\n').append("Successors:");
         if (successors.isEmpty())
             sb.append(" None");
         else {
             for (int i = 0; i < successors.size(); i++) {
                 BasicBlock succ = successors.get(i);
-                sb.append(" ").append(succ.id).append("[").append(System.identityHashCode(succ)).append("]");
+                sb.append(' ').append(succ.id).append('[').append(System.identityHashCode(succ)).append(']');
             }
         }
         sb.append("\nHandlers:");
@@ -1422,7 +1374,7 @@ public class BasicBlock implements Comparable<BasicBlock> {
             sb.append(" None");
         else {
             for (int i = 0; i < handlers.size(); i++) {
-                sb.append(" ").append(handlers.get(i).catchBB.id);
+                sb.append(' ').append(handlers.get(i).catchBB.id);
             }
         }
         sb.append("\nStart frame:\n").append(startFrame);
@@ -1445,9 +1397,9 @@ public class BasicBlock implements Comparable<BasicBlock> {
      */
     void checkPausableJSR() throws KilimException {
         BasicBlock sub = getJSRTarget();
-        boolean isPausableJSR = false;
         if (sub != null) {
             ArrayList<BasicBlock> subBlocks = sub.getSubBlocks();
+            boolean isPausableJSR = false;
             for (BasicBlock b: subBlocks) {
                 if (b.hasFlag(PAUSABLE)) {
                     isPausableJSR = true;

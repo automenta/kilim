@@ -5,11 +5,12 @@
  */
 
 package kilim.analysis;
-import static kilim.Constants.THROWABLE_CLASS;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+
+import static kilim.Constants.THROWABLE_CLASS;
 
 /**
  * Representation for a catch handler. 
@@ -57,12 +58,12 @@ public class Handler implements Comparable<Handler> {
         return comparePos(h);
     }
     private int comparePos(Handler h) {
-        return from < h.from ? -1 : (from == h.from) ? 0 : 1;
+        return Integer.compare(from, h.from);
     }
     
     public static ArrayList<Handler> consolidate( ArrayList<Handler> list) {
         Collections.sort(list);
-        ArrayList<Handler> newList = new ArrayList<Handler>(list.size());
+        ArrayList<Handler> newList = new ArrayList<>(list.size());
         Handler cur = null;
         for (Handler h: list) {
             if (cur == null) {

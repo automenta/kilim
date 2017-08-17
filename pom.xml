@@ -8,8 +8,8 @@
         <!-- build.xml:fail-libs must be kept in sync with changes to this list -->
         <dependency>
             <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-all</artifactId>
-            <version>5.0.3</version>
+            <artifactId>asm-debug-all</artifactId>
+            <version>6.0_ALPHA</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -17,24 +17,14 @@
             <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.conversantmedia/disruptor -->
         <dependency>
-          <groupId>org.apache.maven.plugin-tools</groupId>
-          <artifactId>maven-plugin-annotations</artifactId>
-          <version>3.5</version>
-          <scope>provided</scope>
+            <groupId>com.conversantmedia</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>1.2.10</version>
         </dependency>
-        <dependency>
-          <groupId>org.apache.maven</groupId>
-          <artifactId>maven-core</artifactId>
-          <version>3.0</version>
-          <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>9.3.0.v20150612</version>
-            <scope>provided</scope>
-        </dependency>
+
+
     </dependencies>
     <licenses>
         <license>
@@ -53,7 +43,7 @@
         <developerConnection>scm:git:git@github.com:nqzero/kilim.git</developerConnection>
         <url>git@github.com:nqzero/kilim.git</url>
         <tag>master</tag>
-    </scm>    
+    </scm>
     <name>kilim</name>
     <description>Coroutines, continuations, fibers, actors and message passing for the JVM</description>
     <url>https://github.com/nqzero/kilim</url>
@@ -67,21 +57,7 @@
     </developers>
     <build>
         <plugins>
-            <plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-dependency-plugin</artifactId>
-		<version>2.10</version>
-		<executions>
-                    <execution>
-			<id>copy-dependencies</id>
-			<phase>initialize</phase>
-			<goals> <goal>copy-dependencies</goal> </goals>
-			<configuration>
-			    <outputDirectory>${basedir}/libs</outputDirectory>
-			</configuration>
-                    </execution>
-		</executions>
-            </plugin>
+
             <!-- the primary env is ant, tests are disabled in mvn as they don't fit the lifecycle-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -91,59 +67,15 @@
                     <skipTests>true</skipTests>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.sun</groupId>
-                        <artifactId>tools</artifactId>
-                        <version>1.8.0</version>
-                        <scope>system</scope>
-                        <systemPath>${java.home}/../lib/tools.jar</systemPath>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <phase>process-classes</phase>
-                        <configuration>
-                            <tasks> <ant antfile="build.xml" target="weave"/> </tasks>
-                        </configuration>
-                        <goals> <goal>run</goal> </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.5</version>
-                <configuration>
-                    <goalPrefix>kilim</goalPrefix>
-                    <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>mojo-descriptor</id>
-                        <goals>
-                            <goal>descriptor</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>help-goal</id>
-                        <goals>
-                            <goal>helpmojo</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
         <sourceDirectory>src</sourceDirectory>
         <testSourceDirectory>test</testSourceDirectory>
     </build>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <netbeans.compile.on.save>none</netbeans.compile.on.save>
+        <maven.compiler.source>1.9</maven.compiler.source>
+        <maven.compiler.target>1.9</maven.compiler.target>
+
     </properties>
 
 

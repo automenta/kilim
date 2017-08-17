@@ -5,11 +5,11 @@
  */
 package kilim;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import kilim.nio.NioSelectorScheduler.RegistrationTask;
 import kilim.timerservice.Timer;
 import kilim.timerservice.TimerService;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This is a basic FIFO Executor. It maintains a list of runnable tasks and hands them out to WorkerThreads. Note
@@ -19,10 +19,13 @@ import kilim.timerservice.TimerService;
  *
  */
 public class Scheduler {
-    private static final int defaultQueueSize_ = Integer.MAX_VALUE;
+    private static final int defaultQueueSize_ =
+            64 * 1024;
+            //Integer.MAX_VALUE; //<- LinkedBlockingQueue
+
     public static volatile Scheduler defaultScheduler = null;
     public static int defaultNumberThreads;
-    private static final ThreadLocal<Task> taskMgr_ = new ThreadLocal<Task>();
+    private static final ThreadLocal<Task> taskMgr_ = new ThreadLocal<>();
 
     private int numThreads;
     private AffineThreadPool affinePool_;
@@ -39,7 +42,7 @@ public class Scheduler {
             } catch (Exception e) {
             }
         if (defaultNumberThreads==0)
-            defaultNumberThreads = Runtime.getRuntime().availableProcessors();
+            defaultNumberThreads = Math.max(1, Runtime.getRuntime().availableProcessors()-1 /* one spare */);
     }
 
     protected static Task getCurrentTask() {

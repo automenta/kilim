@@ -6,11 +6,11 @@
 
 package kilim;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import kilim.concurrent.MPSCQueue;
 import kilim.concurrent.VolatileReferenceCell;
+
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * This is a typed buffer that supports single producers and a single consumer.
@@ -26,8 +26,8 @@ import kilim.concurrent.VolatileReferenceCell;
 
 public class MailboxMPSC<T> extends MPSCQueue<T> implements PauseReason, EventPublisher {
 	// TODO. Give mbox a config name and id and make monitorable
-	VolatileReferenceCell<EventSubscriber> sink = new VolatileReferenceCell<EventSubscriber>();
-	Queue<EventSubscriber> srcs = new ConcurrentLinkedQueue<EventSubscriber>();
+	VolatileReferenceCell<EventSubscriber> sink = new VolatileReferenceCell<>();
+	Queue<EventSubscriber> srcs = new ConcurrentLinkedQueue<>();
 
 	// FIX: I don't like this event design. The only good thing is that
 	// we don't create new event objects every time we signal a client
@@ -65,7 +65,6 @@ public class MailboxMPSC<T> extends MPSCQueue<T> implements PauseReason, EventPu
 	 */
 
 	public T get(EventSubscriber eo) {
-		EventSubscriber producer = null;
 		T e = poll();
 		if (e == null) {
 			if (eo != null) {
@@ -73,7 +72,8 @@ public class MailboxMPSC<T> extends MPSCQueue<T> implements PauseReason, EventPu
 			}
 		}
 
-		if (srcs.size() > 0) {
+		EventSubscriber producer = null;
+		if (!srcs.isEmpty()) {
 			producer = srcs.poll();
 		}
 		if (producer != null) {
@@ -98,14 +98,13 @@ public class MailboxMPSC<T> extends MPSCQueue<T> implements PauseReason, EventPu
 		if (msg == null) {
 			throw new NullPointerException("Null is not a valid element");
 		}
-		EventSubscriber subscriber;
 		boolean b = offer(msg);
 		if (!b) {
 			if (eo != null) {
 				srcs.offer(eo);
 			}
 		}
-		subscriber = sink.getAndSet(null);
+		EventSubscriber subscriber = sink.getAndSet(null);
 
 		if (subscriber != null) {
 			// sink.value = null;
@@ -436,7 +435,9 @@ public class MailboxMPSC<T> extends MPSCQueue<T> implements PauseReason, EventPu
 	}
 
 	public boolean hasSpace() {
-		return hasSpace();
+		while (true) {
+
+		}
 	}
 
 	/**
@@ -474,7 +475,7 @@ public class MailboxMPSC<T> extends MPSCQueue<T> implements PauseReason, EventPu
 //	}
 
 	public synchronized String toString() {
-		return "id:" + System.identityHashCode(this) + " " +
+		return "id:" + System.identityHashCode(this) + ' ' +
 		// DEBUG "nGet:" + nGet + " " +
 		// "nPut:" + nPut + " " +
 		// "numWastedPuts:" + nWastedPuts + " " +

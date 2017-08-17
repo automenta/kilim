@@ -2,25 +2,25 @@
 
 package kilim.examples;
 
-import java.lang.reflect.Method;
-
 import kilim.Pausable;
 import kilim.Task;
 
+import java.lang.reflect.Method;
+
 public class Reflect extends Task {
   @Override
-  public void execute() throws Pausable, Exception {
+  public void execute() throws Pausable, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, java.lang.reflect.InvocationTargetException {
     int n = test();
     System.out.println("test (normal invocation of instance method): " + n);
     // Invoking test() via reflection
-    Method mthd = Reflect.class.getDeclaredMethod("test", new Class[0]);
+    Method mthd = Reflect.class.getDeclaredMethod("test");
     Object ret = Task.invoke(mthd, this, /* no args */(Object[])null);
     System.out.println("test (reflect invocation of instance method): " + ret);
 
     n = static_test();
     System.out.println("test (normal invocation of static method): " + n);
     // Invoking test() via reflection
-    mthd = Reflect.class.getDeclaredMethod("static_test", new Class[0]);
+    mthd = Reflect.class.getDeclaredMethod("static_test");
     ret = Task.invoke(mthd, /* target = */ null, /* no args */(Object[])null);
     System.out.println("test (reflect invocation of static method): " + ret);
     System.exit(0);

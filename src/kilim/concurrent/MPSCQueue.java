@@ -182,16 +182,11 @@ public class MPSCQueue<E> extends MPSCQueueL3Pad<E> {
 	}
 
 	public boolean hasSpace() {
-		long currentTail;
-		currentTail = getTail();
-		@SuppressWarnings("unchecked")
+        long currentTail = getTail();
+        @SuppressWarnings("unchecked")
 		final E e = (E) UnsafeAccess.UNSAFE.getObjectVolatile(buffer,
 				elementOffsetInBuffer(currentTail));
-		if (e == null) {
-			return true;
-		} else {
-			return false;
-		}
+        return e == null;
 	}
 
 	public E poll() {
@@ -209,13 +204,10 @@ public class MPSCQueue<E> extends MPSCQueueL3Pad<E> {
 	public void fill(E []buf){
 		int n=buf.length;
 		for(int i=0;i<n;i++){
-			buf[i] = null;
-			buf[i] = poll();
-			if(buf[i]==null){
+			if((buf[i] = poll())==null){
 				return;
 			}
 		}
-		
 	}
 	
 	public E remove() {

@@ -2,10 +2,10 @@
 
 package kilim.tools;
 
-import java.lang.reflect.Method;
 import kilim.Constants;
-
 import kilim.WeavingClassLoader;
+
+import java.lang.reflect.Method;
 
 
 
@@ -22,7 +22,7 @@ import kilim.WeavingClassLoader;
  * a main method can also call the trampoline to trigger automatic weaving if needed
  */
 public class Kilim {
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         if (args.length == 0) {
             usage();
         }
@@ -31,10 +31,10 @@ public class Kilim {
         run(className,"main",args);
     }
     /** run static method className.method(args) using reflection and the WeavingClassLoader */
-    public static void run(String className,String method,String ... args) throws Exception {
+    public static void run(String className,String method,String ... args) throws ClassNotFoundException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, java.lang.reflect.InvocationTargetException {
         WeavingClassLoader wcl = new WeavingClassLoader();
         Class<?> mainClass = wcl.loadClass(className);
-        Method mainMethod = mainClass.getMethod(method, new Class[]{String[].class});
+        Method mainMethod = mainClass.getMethod(method, String[].class);
         mainMethod.invoke(null,new Object[] {args});
     }
 

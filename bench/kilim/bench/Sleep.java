@@ -6,13 +6,15 @@
 
 package kilim.bench;
 
-import kilim.*;
+import kilim.Fiber;
+import kilim.Pausable;
+import kilim.Task;
 
 
 public class Sleep extends Task {
     static boolean pause = false;
     static boolean pausable = false;
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception, NumberFormatException {
         int n = Integer.parseInt(args[0]);
         
         sleep(); // waste 

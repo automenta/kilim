@@ -61,7 +61,7 @@ public abstract class Continuation implements Fiber.Worker {
             assert (active=false)==false;
         }
         catch (Exception        kex) { ex = kex; }
-        boolean ret = ex==null ? fiber.end() : true;
+        boolean ret = ex != null || fiber.end();
         return ret;
     }
     private boolean active = false;
@@ -72,7 +72,7 @@ public abstract class Continuation implements Fiber.Worker {
      * cannot be called directly - use run() instead
      * use Fiber.yield() to yield control cooperatively and return execution to the caller of run()
      */
-    public void execute() throws Pausable, Exception {
+    public void execute() throws Exception {
         Task.errNotWoven();
     }
     /**

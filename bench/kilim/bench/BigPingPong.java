@@ -5,30 +5,34 @@
  */
 
 package kilim.bench;
-import kilim.*;
+
+import kilim.Mailbox;
+import kilim.Pausable;
+import kilim.Scheduler;
+import kilim.Task;
 public class BigPingPong extends Task {
     static Mailbox<Msg>[] mboxes;
     static Mailbox<Msg> mainmb;
 
     
     @SuppressWarnings("unchecked")
-    public static void main(String args[]) throws Exception {
+    public static void main(String args[]) throws NumberFormatException, InterruptedException {
         boolean noargs = args.length == 0;
         int nTasks = noargs ? 10 : Integer.parseInt(args[0]);
         int nSchedulers = noargs ? 1 : Integer.parseInt(args[1]);
         int nThreadsPerScheduler = noargs ? 1 : Integer.parseInt(args[2]);
-        Scheduler [] schedulers = new Scheduler[nSchedulers];
-        
+
         System.out.println("nTasks : " + nTasks + ", nSchedulers: " + nSchedulers + 
                 ", nThreadsPerScheduler: " + nThreadsPerScheduler);
-        
+
+        Scheduler[] schedulers = new Scheduler[nSchedulers];
         for (int c = 0; c < 13; c++) { // Timing loop
             long beginTime = System.currentTimeMillis();
             mboxes = new Mailbox[nTasks];
 //            mainmb = new Mailbox<Msg>(/* initial size = */ nTasks);
-            mainmb = new Mailbox<Msg>(/* initial size = */ nTasks, nTasks);
+            mainmb = new Mailbox<>(/* initial size = */ nTasks, nTasks);
             for (int i = 0; i < nTasks; i++) {
-                mboxes[i] = new Mailbox<Msg>(/* initial size = */ nTasks, nTasks);
+                mboxes[i] = new Mailbox<>(/* initial size = */ nTasks, nTasks);
             }
 
             for (int i = 0 ; i < nSchedulers; i++) {
@@ -108,6 +112,6 @@ public class BigPingPong extends Task {
         static Msg gMsg = new Msg(0);
         int from;
         Msg(int f) {from = f;}
-    };
+    }
 }
 
